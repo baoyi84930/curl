@@ -299,6 +299,9 @@ DPAGES = \
   tlsv1.2.md \
   tlsv1.3.md \
   tlsv1.md \
+  tlcp1.1.md \
+  tlcp-enc-cert.md \
+  tlcp-enc-key.md \
   tr-encoding.md \
   trace-ascii.md \
   trace-config.md \

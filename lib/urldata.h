@@ -808,6 +808,11 @@ enum dupstring {
   STRING_SET_URL,         /* what original URL to work on */
   STRING_USERAGENT,       /* User-Agent string */
   STRING_SSL_ENGINE,      /* name of SSL engine */
+#ifdef USE_OPENHITLS
+  STRING_TLCP_ENC_CERT,   /* TLCP encryption certificate filename */
+  STRING_TLCP_ENC_KEY,    /* TLCP encryption private key filename */
+  STRING_TLCP_ENC_KEY_PASSWD, /* TLCP encryption private key password */
+#endif
   STRING_USERNAME,        /* <username>, if used */
   STRING_PASSWORD,        /* <password>, if used */
   STRING_OPTIONS,         /* <options>, if used */

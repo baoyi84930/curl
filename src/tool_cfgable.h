@@ -124,6 +124,11 @@ struct OperationConfig {
   char *proxy_key_type;
   char *key_passwd;
   char *proxy_key_passwd;
+#ifdef USE_OPENHITLS
+  char *tlcp_enc_cert;     /* TLCP encryption certificate filename */
+  char *tlcp_enc_key;      /* TLCP encryption private key filename */
+  char *tlcp_enc_key_passwd; /* TLCP encryption private key password */
+#endif
   char *pubkey;
   char *hostpubmd5;
   char *hostpubsha256;

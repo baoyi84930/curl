@@ -279,6 +279,13 @@ static long tlsversion(unsigned char mintls,
     tlsver = CURL_SSLVERSION_TLSv1_2;
     break;
   case 4:
+    tlsver = CURL_SSLVERSION_TLSv1_3;
+    break;
+#ifdef USE_OPENHITLS
+  case 8:
+    tlsver = CURL_SSLVERSION_TLCP_1_1;
+    break;
+#endif
   default: /* in case */
     tlsver = CURL_SSLVERSION_TLSv1_3;
     break;
@@ -296,6 +303,13 @@ static long tlsversion(unsigned char mintls,
     tlsver |= CURL_SSLVERSION_MAX_TLSv1_2;
     break;
   case 4:
+    tlsver |= CURL_SSLVERSION_MAX_TLSv1_3;
+    break;
+#ifdef USE_OPENHITLS
+  case 8:
+    tlsver |= CURL_SSLVERSION_MAX_TLCP_1_1;
+    break;
+#endif
   default: /* in case */
     tlsver |= CURL_SSLVERSION_MAX_TLSv1_3;
     break;
@@ -407,7 +421,12 @@ static CURLcode ssl_setopts(struct OperationConfig *config, CURL *curl)
   MY_SETOPT_STR(curl, CURLOPT_PROXY_SSLKEY, config->proxy_key);
   MY_SETOPT_STR(curl, CURLOPT_SSLKEYTYPE, config->key_type);
   MY_SETOPT_STR(curl, CURLOPT_PROXY_SSLKEYTYPE, config->proxy_key_type);
-
+#ifdef USE_OPENHITLS
+  MY_SETOPT_STR(curl, CURLOPT_TLCP_ENC_CERT, config->tlcp_enc_cert);
+  MY_SETOPT_STR(curl, CURLOPT_TLCP_ENC_KEY, config->tlcp_enc_key);
+  MY_SETOPT_STR(curl, CURLOPT_TLCP_ENC_KEYPASSWD,
+                config->tlcp_enc_key_passwd);
+#endif
   /* libcurl default is strict verifyhost -> 1L, verifypeer -> 1L */
   if(config->insecure_ok) {
     my_setopt_long(curl, CURLOPT_SSL_VERIFYPEER, 0);

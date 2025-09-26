@@ -25,7 +25,8 @@
  ***************************************************************************/
 #include "curl_setup.h"
 
-#if defined(USE_MBEDTLS) || defined(USE_RUSTLS)
+#if defined(USE_MBEDTLS) || defined(USE_RUSTLS) || defined(USE_OPENHITLS)
+#include <stdint.h>
 
 /* Lookup IANA id for cipher suite string, returns 0 if not recognized */
 uint16_t Curl_cipher_suite_lookup_id(const char *cs_str, size_t cs_len);

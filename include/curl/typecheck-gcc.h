@@ -488,6 +488,9 @@ CURLWARNING(Wcurl_easy_getinfo_err_curl_off_t,
    (option) == CURLOPT_SSL_EC_CURVES ||                                 \
    (option) == CURLOPT_SSL_SIGNATURE_ALGORITHMS ||                      \
    (option) == CURLOPT_TLS13_CIPHERS ||                                 \
+   (option) == CURLOPT_TLCP_ENC_CERT ||                               \
+   (option) == CURLOPT_TLCP_ENC_KEY ||                                 \
+   (option) == CURLOPT_TLCP_ENC_KEYPASSWD ||                           \
    (option) == CURLOPT_TLSAUTH_PASSWORD ||                              \
    (option) == CURLOPT_TLSAUTH_TYPE ||                                  \
    (option) == CURLOPT_TLSAUTH_USERNAME ||                              \

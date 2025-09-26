@@ -12,3 +12,8 @@ test-ca.cnt*
 test-ca.db*
 test-ca.raw*
 test-ca.srl
+test-tlcp-ca.cacert
+test-tlcp-ca.cnt*
+test-tlcp-ca.db*
+test-tlcp-ca.raw*
+test-tlcp-ca.srl

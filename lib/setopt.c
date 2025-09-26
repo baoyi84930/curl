@@ -1897,6 +1897,26 @@ static CURLcode setopt_cptr_ssl(struct Curl_easy *data, CURLoption option,
      */
     result = Curl_setstropt(&s->str[STRING_KEY_PASSWD], ptr);
     break;
+#ifdef USE_OPENHITLS
+  case CURLOPT_TLCP_ENC_CERT:
+    /*
+     * String that holds filename of the TLCP encryption certificate to use
+     */
+    result = Curl_setstropt(&s->str[STRING_TLCP_ENC_CERT], ptr);
+    break;
+  case CURLOPT_TLCP_ENC_KEY:
+    /*
+     * String that holds filename of the TLCP encryption private key to use
+     */
+    result = Curl_setstropt(&s->str[STRING_TLCP_ENC_KEY], ptr);
+    break;
+  case CURLOPT_TLCP_ENC_KEYPASSWD:
+    /*
+     * String that holds the TLCP encryption private key password.
+     */
+    result = Curl_setstropt(&s->str[STRING_TLCP_ENC_KEY_PASSWD], ptr);
+    break;
+#endif
 #ifdef USE_SSL
   case CURLOPT_CAINFO:
     /*

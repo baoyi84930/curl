@@ -27,6 +27,10 @@ CERTCONFIG_CA = \
   test-ca.cnf \
   test-ca.prm
 
+CERTCONFIG_TLCP_CA = \
+  test-tlcp-ca.cnf \
+  test-tlcp-ca.prm
+
 CERTCONFIGS = \
   test-client-cert.prm \
   test-client-eku-only.prm \
@@ -35,6 +39,10 @@ CERTCONFIGS = \
   test-localhost0h.prm \
   test-localhost-san-first.prm \
   test-localhost-san-last.prm
+
+CERTCONFIGS_TLCP = \
+  test-tlcp-sign-cert.prm \
+  test-tlcp-enc-cert.prm
 
 GENERATEDCERTS = \
   test-ca.cacert \
@@ -81,7 +89,22 @@ GENERATEDCERTS = \
   test-localhost0h.key \
   test-localhost0h.pem \
   test-localhost0h.pub.der \
-  test-localhost0h.pub.pem
+  test-localhost0h.pub.pem \
+  test-tlcp-ca.cacert \
+  test-tlcp-ca.crt \
+  test-tlcp-ca.key \
+  test-tlcp-enc-cert.crl \
+  test-tlcp-enc-cert.crt \
+  test-tlcp-enc-cert.key \
+  test-tlcp-enc-cert.pem \
+  test-tlcp-enc-cert.pub.der \
+  test-tlcp-enc-cert.pub.pem \
+  test-tlcp-sign-cert.crl \
+  test-tlcp-sign-cert.crt \
+  test-tlcp-sign-cert.key \
+  test-tlcp-sign-cert.pem \
+  test-tlcp-sign-cert.pub.der \
+  test-tlcp-sign-cert.pub.pem
 
 SRPFILES = \
   srp-verifier-conf \

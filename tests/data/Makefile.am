@@ -290,7 +290,9 @@ test3300 test3301 test3302 test3303 test3304 test3305 \
 \
 test3400 test3401 \
 \
-test4000 test4001
+test4000 test4001 \
+\
+test8001 test8002
 
 EXTRA_DIST = $(TESTCASES) DISABLED data-xml1 data320.html \
 data1461.txt data1463.txt  \

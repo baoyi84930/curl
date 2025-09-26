@@ -23,7 +23,7 @@
  ***************************************************************************/
 #include "curl_setup.h"
 
-#if defined(USE_MBEDTLS) || defined(USE_RUSTLS)
+#if defined(USE_MBEDTLS) || defined(USE_RUSTLS) || defined(USE_OPENHITLS)
 
 #include "vtls/cipher_suite.h"
 
@@ -87,6 +87,11 @@ static const char *cs_txt =
   "CAMELLIA128" "\0"
   "CAMELLIA256" "\0"
 #endif
+#ifdef USE_OPENHITLS
+  "SM3" "\0"
+  "SM4" "\0"
+  "ECC" "\0"
+#endif
 ;
 /* Indexes of above cs_txt */
 enum {
@@ -127,6 +132,11 @@ enum {
   CS_TXT_IDX_CAMELLIA,
   CS_TXT_IDX_CAMELLIA128,
   CS_TXT_IDX_CAMELLIA256,
+#endif
+#ifdef USE_OPENHITLS
+  CS_TXT_IDX_SM3,
+  CS_TXT_IDX_SM4,
+  CS_TXT_IDX_ECC,
 #endif
   CS_TXT_LEN,
 };
@@ -536,6 +546,17 @@ static const struct cs_entry cs_list[] = {
   CS_ENTRY(0xCCAE, TLS,RSA,PSK,WITH,CHACHA20,POLY1305,SHA256,),
   CS_ENTRY(0xCCAE, RSA,PSK,CHACHA20,POLY1305,,,,),
 #endif
+#ifdef USE_OPENHITLS
+  /* TLCP (Transport Layer Cryptography Protocol) cipher suites */
+  CS_ENTRY(0xE011, ECDHE,SM4,CBC,SM3,,,,),
+  CS_ENTRY(0xE011, TLS,ECDHE,WITH,SM4,CBC,SM3,,),
+  CS_ENTRY(0xE013, ECC,SM4,CBC,SM3,,,,),
+  CS_ENTRY(0xE013, TLS,ECC,WITH,SM4,CBC,SM3,,),
+  CS_ENTRY(0xE051, ECDHE,SM4,GCM,SM3,,,,),
+  CS_ENTRY(0xE051, TLS,ECDHE,WITH,SM4,GCM,SM3,,),
+  CS_ENTRY(0xE053, ECC,SM4,GCM,SM3,,,,),
+  CS_ENTRY(0xE053, TLS,ECC,WITH,SM4,GCM,SM3,,),
+#endif
 };
 #define CS_LIST_LEN CURL_ARRAYSIZE(cs_list)
 
@@ -699,4 +720,4 @@ int Curl_cipher_suite_get_str(uint16_t id, char *buf, size_t buf_size,
   return r;
 }
 
-#endif /* defined(USE_MBEDTLS) || defined(USE_RUSTLS) */
+#endif /* defined(USE_MBEDTLS) || defined(USE_RUSTLS) || defined(USE_OPENHITLS) */

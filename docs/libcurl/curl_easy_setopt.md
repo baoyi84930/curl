@@ -1238,6 +1238,18 @@ Time value for the time conditional request. See CURLOPT_TIMEVALUE(3)
 
 Time value for the time conditional request. See CURLOPT_TIMEVALUE_LARGE(3)
 
+## CURLOPT_TLCP_ENC_CERT
+
+TLCP encryption certificate. See CURLOPT_TLCP_ENC_CERT(3)
+
+## CURLOPT_TLCP_ENC_KEY
+
+TLCP encryption private key. See CURLOPT_TLCP_ENC_KEY(3)
+
+## CURLOPT_TLCP_ENC_KEYPASSWD
+
+TLCP encryption private key passphrase. See CURLOPT_TLCP_ENC_KEYPASSWD(3)
+
 ## CURLOPT_TLS13_CIPHERS
 
 TLS 1.3 cipher suites to use. See CURLOPT_TLS13_CIPHERS(3)

@@ -139,6 +139,10 @@ typedef enum {
   C_KEEPALIVE_TIME,
   C_KEY,
   C_KEY_TYPE,
+#ifdef USE_OPENHITLS
+  C_TLCP_ENC_CERT,      /* --tlcp-enc-cert */
+  C_TLCP_ENC_KEY,       /* --tlcp-enc-key */
+#endif
   C_KNOWNHOSTS,
   C_KRB,
   C_KRB4,
@@ -290,6 +294,9 @@ typedef enum {
   C_TLSV1_1,
   C_TLSV1_2,
   C_TLSV1_3,
+#ifdef USE_OPENHITLS
+  C_TLCP1_1,      /* --tlcp1.1 */
+#endif
   C_TR_ENCODING,
   C_TRACE,
   C_TRACE_ASCII,

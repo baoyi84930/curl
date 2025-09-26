@@ -163,7 +163,8 @@ typedef enum {
   CURLSSLBACKEND_MBEDTLS = 11,
   CURLSSLBACKEND_MESALINK               CURL_DEPRECATED(7.82.0, "") = 12,
   CURLSSLBACKEND_BEARSSL                CURL_DEPRECATED(8.15.0, "") = 13,
-  CURLSSLBACKEND_RUSTLS = 14
+  CURLSSLBACKEND_RUSTLS = 14,
+  CURLSSLBACKEND_OPENHITLS = 15
 } curl_sslbackend;
 
 /* aliases for library clones and renames */
@@ -2262,6 +2263,15 @@ typedef enum {
   /* set TLS supported signature algorithms */
   CURLOPT(CURLOPT_SSL_SIGNATURE_ALGORITHMS, CURLOPTTYPE_STRINGPOINT, 328),
 
+  /* TLCP encryption certificate */
+  CURLOPT(CURLOPT_TLCP_ENC_CERT, CURLOPTTYPE_STRINGPOINT, 329),
+
+  /* TLCP encryption private key */
+  CURLOPT(CURLOPT_TLCP_ENC_KEY, CURLOPTTYPE_STRINGPOINT, 330),
+
+  /* password for TLCP encryption private key */
+  CURLOPT(CURLOPT_TLCP_ENC_KEYPASSWD, CURLOPTTYPE_STRINGPOINT, 331),
+
   CURLOPT_LASTENTRY /* the last unused */
 } CURLoption;
 
@@ -2374,7 +2384,12 @@ enum CURL_NETRC_OPTION {
 #define CURL_SSLVERSION_TLSv1_2 6L
 #define CURL_SSLVERSION_TLSv1_3 7L
 
+#ifdef USE_OPENHITLS
+#define CURL_SSLVERSION_TLCP_1_1 8L    /* TLCP 1.1 (openHiTLS specific) */
+#define CURL_SSLVERSION_LAST    9L /* never use, keep last */
+#else
 #define CURL_SSLVERSION_LAST    8L /* never use, keep last */
+#endif
 
 #define CURL_SSLVERSION_MAX_NONE 0L
 #define CURL_SSLVERSION_MAX_DEFAULT (CURL_SSLVERSION_TLSv1   << 16)
@@ -2382,6 +2397,10 @@ enum CURL_NETRC_OPTION {
 #define CURL_SSLVERSION_MAX_TLSv1_1 (CURL_SSLVERSION_TLSv1_1 << 16)
 #define CURL_SSLVERSION_MAX_TLSv1_2 (CURL_SSLVERSION_TLSv1_2 << 16)
 #define CURL_SSLVERSION_MAX_TLSv1_3 (CURL_SSLVERSION_TLSv1_3 << 16)
+
+#ifdef USE_OPENHITLS
+#define CURL_SSLVERSION_MAX_TLCP_1_1 (CURL_SSLVERSION_TLCP_1_1 << 16)
+#endif
 
 /* never use, keep last */
 #define CURL_SSLVERSION_MAX_LAST    (CURL_SSLVERSION_LAST    << 16)

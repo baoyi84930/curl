@@ -609,6 +609,10 @@ sub checksystemfeatures {
                 $feature{"mbedtls"} = 1;
                 $feature{"SSLpinning"} = 1;
             }
+            elsif($libcurl =~ /\sOpenHiTLS\b/i) {
+                $feature{"openHiTLS"} = 1;
+                $feature{"SSLpinning"} = 1;
+            }
             if($libcurl =~ /ares/i) {
                 $feature{"c-ares"} = 1;
                 $resolver = "c-ares";

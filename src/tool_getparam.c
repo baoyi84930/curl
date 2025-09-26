@@ -335,6 +335,11 @@ static const struct LongShort aliases[] = {
   {"tftp-blksize",               ARG_UNUM, ' ', C_TFTP_BLKSIZE},
   {"tftp-no-options",            ARG_BOOL, ' ', C_TFTP_NO_OPTIONS},
   {"time-cond",                  ARG_STRG, 'z', C_TIME_COND},
+#ifdef USE_OPENHITLS
+  {"tlcp-enc-cert",              ARG_FILE|ARG_TLS, ' ', C_TLCP_ENC_CERT},
+  {"tlcp-enc-key",               ARG_FILE|ARG_TLS, ' ', C_TLCP_ENC_KEY},
+  {"tlcp1.1",                    ARG_NONE|ARG_TLS, ' ', C_TLCP1_1},
+#endif
   {"tls-earlydata",              ARG_BOOL|ARG_TLS, ' ', C_TLS_EARLYDATA},
   {"tls-max",                    ARG_STRG|ARG_TLS, ' ', C_TLS_MAX},
   {"tls13-ciphers",              ARG_STRG|ARG_TLS, ' ', C_TLS13_CIPHERS},
@@ -1809,6 +1814,11 @@ static ParameterError opt_none(struct OperationConfig *config,
   case C_TLSV1_3: /* --tlsv1.3 */
     err = opt_sslver(config, 4);
     break;
+#ifdef USE_OPENHITLS
+  case C_TLCP1_1: /* --tlcp1.1 */
+    err = opt_sslver(config, 8);  /* CURL_SSLVERSION_TLCP_1_1 */
+    break;
+#endif
   case C_IPV4: /* --ipv4 */
     config->ip_version = CURL_IPRESOLVE_V4;
     break;
@@ -2761,6 +2771,15 @@ static ParameterError opt_string(struct OperationConfig *config,
   case C_KEY_TYPE: /* --key-type */
     err = getstr(&config->key_type, nextarg, DENY_BLANK);
     break;
+#ifdef USE_OPENHITLS
+  case C_TLCP_ENC_CERT: /* --tlcp-enc-cert */
+    GetFileAndPassword(nextarg, &config->tlcp_enc_cert,
+      &config->tlcp_enc_key_passwd);
+    break;
+  case C_TLCP_ENC_KEY: /* --tlcp-enc-key */
+    err = getstr(&config->tlcp_enc_key, nextarg, DENY_BLANK);
+    break;
+#endif
   case C_PASS: /* --pass */
     err = getstr(&config->key_passwd, nextarg, DENY_BLANK);
     break;

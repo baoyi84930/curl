@@ -1,0 +1,35 @@
+<testcase>
+<info>
+<keywords>
+TLCP
+unittest
+FAILURE
+backend
+</keywords>
+</info>
+
+# Client-side
+<client>
+<features>
+SSL
+!openHiTLS
+unittest
+</features>
+<tool>
+lib%TESTNUMBER
+</tool>
+<name>
+TLCP options rejected on non-openHiTLS backend
+</name>
+</client>
+
+# Verify
+<verify>
+<stdout mode="text">
+TLCP option correctly rejected: CURLOPT_TLCP_ENC_CERT
+TLCP option correctly rejected: CURLOPT_TLCP_ENC_KEY
+TLCP option correctly rejected: CURLOPT_TLCP_ENC_KEYPASSWD
+Non-openHiTLS backend test: PASS
+</stdout>
+</verify>
+</testcase>

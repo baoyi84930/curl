@@ -1,0 +1,11 @@
+[ ca ]
+default_ca = test_tlcp
+
+[ test_tlcp ]
+database = test-tlcp-ca.db
+certificate = test-tlcp-ca.crt
+private_key = test-tlcp-ca.key
+crlnumber = test-tlcp-ca.cnt
+default_md = sm3
+default_days = 365
+default_crl_days = 30

@@ -411,6 +411,9 @@ man_MANS =                                      \
   CURLOPT_TIMEVALUE.3                           \
   CURLOPT_TIMEVALUE_LARGE.3                     \
   CURLOPT_TLS13_CIPHERS.3                       \
+  CURLOPT_TLCP_ENC_CERT.3                       \
+  CURLOPT_TLCP_ENC_KEY.3                        \
+  CURLOPT_TLCP_ENC_KEYPASSWD.3                  \
   CURLOPT_TLSAUTH_PASSWORD.3                    \
   CURLOPT_TLSAUTH_TYPE.3                        \
   CURLOPT_TLSAUTH_USERNAME.3                    \

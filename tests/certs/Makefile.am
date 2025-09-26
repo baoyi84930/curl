@@ -26,12 +26,12 @@ AUTOMAKE_OPTIONS = foreign
 # Get CERTCONFIG_CA, CERTCONFIGS, GENERATEDCERTS, SRPFILES variables
 include Makefile.inc
 
-EXTRA_DIST = $(CERTCONFIG_CA) $(CERTCONFIGS) $(SRPFILES) CMakeLists.txt \
-  genserv.pl
+EXTRA_DIST = $(CERTCONFIG_CA) $(CERTCONFIG_TLCP_CA) $(CERTCONFIGS) \
+  $(CERTCONFIGS_TLCP) $(SRPFILES) CMakeLists.txt genserv.pl
 
 CLEANFILES = $(GENERATEDCERTS)
 
-all-am: test-ca.cacert
+all-am: test-ca.cacert test-tlcp-ca.cacert
 
 # Rebuild the certificates
 
@@ -39,6 +39,9 @@ all-am: test-ca.cacert
 # to support GNU Make <4.3 without the "grouped explicit targets" feature.
 test-ca.cacert: $(CERTCONFIG_CA) $(CERTCONFIGS) genserv.pl
 	@PERL@ $(srcdir)/genserv.pl test $(CERTCONFIGS)
+
+test-tlcp-ca.cacert: $(CERTCONFIG_TLCP_CA) $(CERTCONFIGS_TLCP) genserv.pl
+	@PERL@ $(srcdir)/genserv.pl test-tlcp $(CERTCONFIGS_TLCP)
 
 clean-local:
 	rm -f $(GENERATEDCERTS) \
@@ -48,4 +51,8 @@ clean-local:
 	  test-ca.cnt* \
 	  test-ca.db* \
 	  test-ca.raw* \
-	  test-ca.srl
+	  test-ca.srl \
+	  test-tlcp-ca.cnt* \
+	  test-tlcp-ca.db* \
+	  test-tlcp-ca.raw* \
+	  test-tlcp-ca.srl
