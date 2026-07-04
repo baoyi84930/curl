@@ -1991,13 +1991,14 @@ Curl_hitls_ctx_init(struct hitls_ctx *hctx, struct Curl_cfilter *cf,
     CURL_TRC_CF(data, cf, "OpenHiTLS: Keylog callback enabled");
   }
 
+  if(!hctx->ca_store_setup) {
+    result = Curl_hitls_setup_x509_store(cf, data, hctx->config);
+    if(result)
+      return result;
+    hctx->ca_store_setup = TRUE;
+  }
+
   if(data->set.ssl.fsslctx) {
-    if(!hctx->ca_store_setup) {
-      result = Curl_hitls_setup_x509_store(cf, data, hctx->config);
-      if(result)
-        return result;
-      hctx->ca_store_setup = TRUE;
-    }
     Curl_set_in_callback(data, TRUE);
     result = (*data->set.ssl.fsslctx)(data, hctx->config,
                                       data->set.ssl.fsslctxp);
@@ -2098,10 +2099,9 @@ hitls_connect_step2(struct Curl_cfilter *cf, struct Curl_easy *data)
   /* Restore previous context */
   HITLS_RESTORE_CONTEXT();
 
-  /* Set up X509 store after handshake initiation */
+  /* X509 store is set before HITLS_New(). Keep this as a fallback in case
+   * an alternate initialization path reaches the handshake without it. */
   if(!hctx->ca_store_setup) {
-    /* After having initiated the handshake, we prepare the x509
-     * store to verify the coming certificate from the server */
     CURLcode result = Curl_hitls_setup_x509_store(cf, data, hctx->config);
     if(result)
       return result;
