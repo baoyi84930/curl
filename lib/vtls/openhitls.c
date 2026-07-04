@@ -61,6 +61,7 @@
 #include "connect.h"
 #include "curl_trc.h"
 #include "curl_sha256.h"
+#include "strcase.h"
 #include "vtls.h"
 #include "vtls_int.h"
 #include "x509asn1.h"
@@ -1512,6 +1513,184 @@ hitls_tlcp_enc_cert(struct Curl_easy *data, HITLS_Config *config,
   return CURLE_OK;
 }
 
+struct hitls_sigalg_map {
+  const char *name;
+  uint16_t id;
+};
+
+static const struct hitls_sigalg_map hitls_sigalg_maps[] = {
+  { "CERT_SIG_SCHEME_RSA_PKCS1_SHA1", CERT_SIG_SCHEME_RSA_PKCS1_SHA1 },
+  { "rsa_pkcs1_sha1", CERT_SIG_SCHEME_RSA_PKCS1_SHA1 },
+  { "RSA+SHA1", CERT_SIG_SCHEME_RSA_PKCS1_SHA1 },
+  { "CERT_SIG_SCHEME_DSA_SHA1", CERT_SIG_SCHEME_DSA_SHA1 },
+  { "dsa_sha1", CERT_SIG_SCHEME_DSA_SHA1 },
+  { "DSA+SHA1", CERT_SIG_SCHEME_DSA_SHA1 },
+  { "CERT_SIG_SCHEME_ECDSA_SHA1", CERT_SIG_SCHEME_ECDSA_SHA1 },
+  { "ecdsa_sha1", CERT_SIG_SCHEME_ECDSA_SHA1 },
+  { "ECDSA+SHA1", CERT_SIG_SCHEME_ECDSA_SHA1 },
+  { "CERT_SIG_SCHEME_ECDSA_SHA224", CERT_SIG_SCHEME_ECDSA_SHA224 },
+  { "ecdsa_sha224", CERT_SIG_SCHEME_ECDSA_SHA224 },
+  { "ECDSA+SHA224", CERT_SIG_SCHEME_ECDSA_SHA224 },
+  { "CERT_SIG_SCHEME_RSA_PKCS1_SHA224", CERT_SIG_SCHEME_RSA_PKCS1_SHA224 },
+  { "rsa_pkcs1_sha224", CERT_SIG_SCHEME_RSA_PKCS1_SHA224 },
+  { "RSA+SHA224", CERT_SIG_SCHEME_RSA_PKCS1_SHA224 },
+  { "CERT_SIG_SCHEME_RSA_PKCS1_SHA256", CERT_SIG_SCHEME_RSA_PKCS1_SHA256 },
+  { "rsa_pkcs1_sha256", CERT_SIG_SCHEME_RSA_PKCS1_SHA256 },
+  { "RSA+SHA256", CERT_SIG_SCHEME_RSA_PKCS1_SHA256 },
+  { "CERT_SIG_SCHEME_RSA_PKCS1_SHA384", CERT_SIG_SCHEME_RSA_PKCS1_SHA384 },
+  { "rsa_pkcs1_sha384", CERT_SIG_SCHEME_RSA_PKCS1_SHA384 },
+  { "RSA+SHA384", CERT_SIG_SCHEME_RSA_PKCS1_SHA384 },
+  { "CERT_SIG_SCHEME_RSA_PKCS1_SHA512", CERT_SIG_SCHEME_RSA_PKCS1_SHA512 },
+  { "rsa_pkcs1_sha512", CERT_SIG_SCHEME_RSA_PKCS1_SHA512 },
+  { "RSA+SHA512", CERT_SIG_SCHEME_RSA_PKCS1_SHA512 },
+  { "CERT_SIG_SCHEME_DSA_SHA224", CERT_SIG_SCHEME_DSA_SHA224 },
+  { "dsa_sha224", CERT_SIG_SCHEME_DSA_SHA224 },
+  { "DSA+SHA224", CERT_SIG_SCHEME_DSA_SHA224 },
+  { "CERT_SIG_SCHEME_DSA_SHA256", CERT_SIG_SCHEME_DSA_SHA256 },
+  { "dsa_sha256", CERT_SIG_SCHEME_DSA_SHA256 },
+  { "DSA+SHA256", CERT_SIG_SCHEME_DSA_SHA256 },
+  { "CERT_SIG_SCHEME_DSA_SHA384", CERT_SIG_SCHEME_DSA_SHA384 },
+  { "dsa_sha384", CERT_SIG_SCHEME_DSA_SHA384 },
+  { "DSA+SHA384", CERT_SIG_SCHEME_DSA_SHA384 },
+  { "CERT_SIG_SCHEME_DSA_SHA512", CERT_SIG_SCHEME_DSA_SHA512 },
+  { "dsa_sha512", CERT_SIG_SCHEME_DSA_SHA512 },
+  { "DSA+SHA512", CERT_SIG_SCHEME_DSA_SHA512 },
+  { "CERT_SIG_SCHEME_ECDSA_SECP256R1_SHA256",
+    CERT_SIG_SCHEME_ECDSA_SECP256R1_SHA256 },
+  { "ecdsa_secp256r1_sha256", CERT_SIG_SCHEME_ECDSA_SECP256R1_SHA256 },
+  { "ECDSA+SHA256", CERT_SIG_SCHEME_ECDSA_SECP256R1_SHA256 },
+  { "CERT_SIG_SCHEME_ECDSA_SECP384R1_SHA384",
+    CERT_SIG_SCHEME_ECDSA_SECP384R1_SHA384 },
+  { "ecdsa_secp384r1_sha384", CERT_SIG_SCHEME_ECDSA_SECP384R1_SHA384 },
+  { "ECDSA+SHA384", CERT_SIG_SCHEME_ECDSA_SECP384R1_SHA384 },
+  { "CERT_SIG_SCHEME_ECDSA_SECP521R1_SHA512",
+    CERT_SIG_SCHEME_ECDSA_SECP521R1_SHA512 },
+  { "ecdsa_secp521r1_sha512", CERT_SIG_SCHEME_ECDSA_SECP521R1_SHA512 },
+  { "ECDSA+SHA512", CERT_SIG_SCHEME_ECDSA_SECP521R1_SHA512 },
+  { "CERT_SIG_SCHEME_SM2_SM3", CERT_SIG_SCHEME_SM2_SM3 },
+  { "sm2_sm3", CERT_SIG_SCHEME_SM2_SM3 },
+  { "SM2+SM3", CERT_SIG_SCHEME_SM2_SM3 },
+  { "CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA256",
+    CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA256 },
+  { "rsa_pss_rsae_sha256", CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA256 },
+  { "CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA384",
+    CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA384 },
+  { "rsa_pss_rsae_sha384", CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA384 },
+  { "CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA512",
+    CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA512 },
+  { "rsa_pss_rsae_sha512", CERT_SIG_SCHEME_RSA_PSS_RSAE_SHA512 },
+  { "CERT_SIG_SCHEME_ED25519", CERT_SIG_SCHEME_ED25519 },
+  { "ed25519", CERT_SIG_SCHEME_ED25519 },
+  { "CERT_SIG_SCHEME_ED448", CERT_SIG_SCHEME_ED448 },
+  { "ed448", CERT_SIG_SCHEME_ED448 },
+  { "CERT_SIG_SCHEME_RSA_PSS_PSS_SHA256",
+    CERT_SIG_SCHEME_RSA_PSS_PSS_SHA256 },
+  { "rsa_pss_pss_sha256", CERT_SIG_SCHEME_RSA_PSS_PSS_SHA256 },
+  { "CERT_SIG_SCHEME_RSA_PSS_PSS_SHA384",
+    CERT_SIG_SCHEME_RSA_PSS_PSS_SHA384 },
+  { "rsa_pss_pss_sha384", CERT_SIG_SCHEME_RSA_PSS_PSS_SHA384 },
+  { "CERT_SIG_SCHEME_RSA_PSS_PSS_SHA512",
+    CERT_SIG_SCHEME_RSA_PSS_PSS_SHA512 },
+  { "rsa_pss_pss_sha512", CERT_SIG_SCHEME_RSA_PSS_PSS_SHA512 }
+};
+
+static bool
+hitls_sigalg_name_match(const char *token, size_t token_len, const char *name)
+{
+  size_t name_len = strlen(name);
+  return (token_len == name_len) && curl_strnequal(token, name, token_len);
+}
+
+static bool
+hitls_sigalg_parse_hex(const char *token, size_t token_len, uint16_t *id)
+{
+  unsigned long value = 0;
+  size_t i;
+
+  if(token_len < 3 || token[0] != '0' ||
+     (token[1] != 'x' && token[1] != 'X'))
+    return FALSE;
+
+  for(i = 2; i < token_len; ++i) {
+    char c = token[i];
+    unsigned int v;
+    if(c >= '0' && c <= '9')
+      v = (unsigned int)(c - '0');
+    else if(c >= 'a' && c <= 'f')
+      v = (unsigned int)(c - 'a' + 10);
+    else if(c >= 'A' && c <= 'F')
+      v = (unsigned int)(c - 'A' + 10);
+    else
+      return FALSE;
+    value = (value << 4) | v;
+    if(value > 0xffff)
+      return FALSE;
+  }
+
+  *id = (uint16_t)value;
+  return TRUE;
+}
+
+static bool
+hitls_sigalg_lookup(const char *token, size_t token_len, uint16_t *id)
+{
+  size_t i;
+
+  if(hitls_sigalg_parse_hex(token, token_len, id))
+    return TRUE;
+
+  for(i = 0; i < CURL_ARRAYSIZE(hitls_sigalg_maps); ++i) {
+    if(hitls_sigalg_name_match(token, token_len, hitls_sigalg_maps[i].name)) {
+      *id = hitls_sigalg_maps[i].id;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static CURLcode
+hitls_set_signature_algorithms(struct Curl_easy *data,
+                               HITLS_Config *config,
+                               const char *signature_algorithms)
+{
+  uint16_t sigalgs[64];
+  uint16_t sigalgs_count = 0;
+  const char *token = signature_algorithms;
+  int32_t ret;
+
+  while(token && *token) {
+    const char *end = strchr(token, ':');
+    size_t token_len = end ? (size_t)(end - token) : strlen(token);
+    uint16_t id;
+
+    if(!token_len || sigalgs_count >= CURL_ARRAYSIZE(sigalgs) ||
+       !hitls_sigalg_lookup(token, token_len, &id)) {
+      failf(data, "OpenHiTLS: unsupported signature algorithm in '%s'",
+            signature_algorithms);
+      return CURLE_SSL_CIPHER;
+    }
+
+    sigalgs[sigalgs_count++] = id;
+    if(!end)
+      break;
+    token = end + 1;
+  }
+
+  if(!sigalgs_count)
+    return CURLE_OK;
+
+  ret = HITLS_CFG_SetSignature(config, sigalgs, sigalgs_count);
+  if(ret != HITLS_SUCCESS) {
+    failf(data, "OpenHiTLS: failed setting signature algorithms '%s' "
+          "(error: %d)", signature_algorithms, ret);
+    return CURLE_SSL_CIPHER;
+  }
+
+  infof(data, "OpenHiTLS: signature algorithms: %s", signature_algorithms);
+  return CURLE_OK;
+}
+
 #ifdef USE_OPENHITLS
 /* Validate TLCP certificate configuration */
 static CURLcode
@@ -1753,6 +1932,13 @@ Curl_hitls_ctx_init(struct hitls_ctx *hctx, struct Curl_cfilter *cf,
       return CURLE_SSL_CIPHER;
     }
     infof(data, "OpenHiTLS: Curve/Group selection: %s", conn_config->curves);
+  }
+
+  if(conn_config->signature_algorithms) {
+    result = hitls_set_signature_algorithms(data, hctx->config,
+                                            conn_config->signature_algorithms);
+    if(result != CURLE_OK)
+      return result;
   }
 
 #ifdef USE_OPENHITLS
@@ -2291,6 +2477,7 @@ const struct Curl_ssl Curl_ssl_openhitls = {
   SSLSUPP_SSL_CTX |
   SSLSUPP_HTTPS_PROXY |
   SSLSUPP_TLS13_CIPHERSUITES |
+  SSLSUPP_SIGNATURE_ALGORITHMS |
   SSLSUPP_CIPHER_LIST |
   SSLSUPP_CAINFO_BLOB,
 
