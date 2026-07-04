@@ -76,22 +76,22 @@
  */
 /* Define a general thread-local storage macro */
 #if __STDC_VERSION__ >= 201112L
-  /* C11 or later supports _Thread_local */
-  /* C11 defines thread_local as an alias for _Thread_local in <threads.h> */
-  /* To avoid including <threads.h> (not all C11 implementations fully support
-   * it), we use _Thread_local directly. */
-  #define THREAD_LOCAL _Thread_local
+/* C11 or later supports _Thread_local */
+/* C11 defines thread_local as an alias for _Thread_local in <threads.h> */
+/* To avoid including <threads.h> (not all C11 implementations fully support
+ * it), we use _Thread_local directly. */
+#define THREAD_LOCAL _Thread_local
 
 #elif defined(__GNUC__) || defined(__clang__)
-  /* GCC or Clang supports __thread extension */
-  #define THREAD_LOCAL __thread
+/* GCC or Clang supports __thread extension */
+#define THREAD_LOCAL __thread
 
 #elif defined(_MSC_VER)
-  /* Microsoft Visual C++ supports __declspec(thread) extension */
-  #define THREAD_LOCAL __declspec(thread)
+/* Microsoft Visual C++ supports __declspec(thread) extension */
+#define THREAD_LOCAL __declspec(thread)
 #else
-  #define THREAD_LOCAL
-  #define NO_OPENHITLS_BIN_LOG
+#define THREAD_LOCAL
+#define NO_OPENHITLS_BIN_LOG
 #endif
 
 /* Thread-local storage for current Curl_easy and Curl_cfilter pointers */
@@ -99,20 +99,20 @@ static THREAD_LOCAL struct Curl_easy *tls_current_data = NULL;
 static THREAD_LOCAL struct Curl_cfilter *tls_current_cf = NULL;
 
 #ifndef NO_OPENHITLS_BIN_LOG
-  #define HITLS_SET_CONTEXT(d, c) \
-    do { \
-      struct Curl_easy *_prev_data = tls_current_data; \
-      struct Curl_cfilter *_prev_cf = tls_current_cf; \
-      tls_current_data = (d); \
-      tls_current_cf = (c)
+#define HITLS_SET_CONTEXT(d, c) \
+  do { \
+    struct Curl_easy *_prev_data = tls_current_data; \
+    struct Curl_cfilter *_prev_cf = tls_current_cf; \
+    tls_current_data = (d); \
+    tls_current_cf = (c)
 
-  #define HITLS_RESTORE_CONTEXT() \
-      tls_current_data = _prev_data; \
-      tls_current_cf = _prev_cf; \
-    } while(0)
+#define HITLS_RESTORE_CONTEXT() \
+    tls_current_data = _prev_data; \
+    tls_current_cf = _prev_cf; \
+  } while(0)
 #else
-  #define HITLS_SET_CONTEXT(d, c)
-  #define HITLS_RESTORE_CONTEXT()
+#define HITLS_SET_CONTEXT(d, c)
+#define HITLS_RESTORE_CONTEXT()
 #endif
 
 struct hitls_ctx {
@@ -328,6 +328,15 @@ static int hitls_do_file_type(const char *type)
   return -1;
 }
 
+static bool
+hitls_size_to_uint32(size_t in, uint32_t *out)
+{
+  if(in > UINT32_MAX)
+    return FALSE;
+  *out = (uint32_t)in;
+  return TRUE;
+}
+
 /* Password callback function for encrypted private keys */
 static int hitls_passwd_callback(char *buf, int size, int rwflag,
                                  void *userdata)
@@ -359,20 +368,23 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
   HITLS_X509_Cert *cert = NULL;
   CRYPT_EAL_PkeyCtx *pkey = NULL;
   BslList *cert_bags = NULL;
-  int ret;
-  CURLcode result = CURLE_SSL_CERTPROBLEM;
-
-  /* Prepare password parameter structure */
   HITLS_PKCS12_PwdParam pwdParam = {0};
   BSL_Buffer encPwd = {0};
   BSL_Buffer macPwd = {0};
+  char *key_passwd_copy = NULL;
+  int ret;
+  CURLcode result = CURLE_SSL_CERTPROBLEM;
 
   if(key_passwd) {
     size_t passwd_len = strlen(key_passwd);
-    encPwd.data = (uint8_t *)key_passwd;
-    encPwd.dataLen = (uint32_t)passwd_len;
-    macPwd.data = (uint8_t *)key_passwd;
-    macPwd.dataLen = (uint32_t)passwd_len;
+    if(!hitls_size_to_uint32(passwd_len, &encPwd.dataLen))
+      return CURLE_SSL_CERTPROBLEM;
+    key_passwd_copy = curlx_strdup(key_passwd);
+    if(!key_passwd_copy)
+      return CURLE_OUT_OF_MEMORY;
+    encPwd.data = (uint8_t *)key_passwd_copy;
+    macPwd.data = (uint8_t *)key_passwd_copy;
+    macPwd.dataLen = encPwd.dataLen;
     pwdParam.encPwd = &encPwd;
     pwdParam.macPwd = &macPwd;
   }
@@ -388,8 +400,8 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
                                  true);
     if(ret != HITLS_SUCCESS) {
       failf(data, "OpenHiTLS: Failed to parse PKCS#12 blob data "
-            "(error: 0x%x)", ret);
-      return CURLE_SSL_CERTPROBLEM;
+            "(error: 0x%x)", (unsigned int)ret);
+      goto cleanup;
     }
   }
   else {
@@ -398,21 +410,21 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
                                  true);
     if(ret != HITLS_SUCCESS) {
       failf(data, "OpenHiTLS: Failed to parse PKCS#12 file '%s' "
-            "(error: 0x%x, check password)", cert_file, ret);
-      return CURLE_SSL_CERTPROBLEM;
+            "(error: 0x%x, check password)", cert_file, (unsigned int)ret);
+      goto cleanup;
     }
   }
 
   if(!p12) {
     failf(data, "OpenHiTLS: PKCS#12 parsing returned NULL");
-    return CURLE_SSL_CERTPROBLEM;
+    goto cleanup;
   }
 
   /* Step 2: Extract entity certificate using HITLS_PKCS12_Ctrl */
   ret = HITLS_PKCS12_Ctrl(p12, HITLS_PKCS12_GET_ENTITY_CERT, &cert, 0);
   if(ret != HITLS_SUCCESS || !cert) {
     failf(data, "OpenHiTLS: Failed to extract certificate from PKCS#12 "
-          "(error: 0x%x)", ret);
+          "(error: 0x%x)", (unsigned int)ret);
     goto cleanup;
   }
 
@@ -420,7 +432,7 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
   ret = HITLS_PKCS12_Ctrl(p12, HITLS_PKCS12_GET_ENTITY_KEY, &pkey, 0);
   if(ret != HITLS_SUCCESS || !pkey) {
     failf(data, "OpenHiTLS: Failed to extract private key from PKCS#12 "
-          "(error: 0x%x)", ret);
+          "(error: 0x%x)", (unsigned int)ret);
     goto cleanup;
   }
 
@@ -428,14 +440,14 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
   ret = HITLS_CFG_SetCertificate(config, cert, true);  /* true = deep copy */
   if(ret != HITLS_SUCCESS) {
     failf(data, "OpenHiTLS: Failed to set certificate from PKCS#12 "
-          "(error: 0x%x)", ret);
+          "(error: 0x%x)", (unsigned int)ret);
     goto cleanup;
   }
 
   ret = HITLS_CFG_SetPrivateKey(config, pkey, true);  /* true = deep copy */
   if(ret != HITLS_SUCCESS) {
     failf(data, "OpenHiTLS: Failed to set private key from PKCS#12 "
-          "(error: 0x%x)", ret);
+          "(error: 0x%x)", (unsigned int)ret);
     goto cleanup;
   }
 
@@ -445,7 +457,7 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
     failf(data,
           "OpenHiTLS: Private key does not match certificate in PKCS#12 "
           "file '%s' (error: 0x%x)",
-          cert_file ? cert_file : "(memory blob)", ret);
+          cert_file ? cert_file : "(memory blob)", (unsigned int)ret);
     goto cleanup;
   }
 
@@ -464,7 +476,7 @@ hitls_pkcs12_load(struct Curl_easy *data, HITLS_Config *config,
         ret = HITLS_CFG_AddChainCert(config, ca_cert, true);
         if(ret != HITLS_SUCCESS) {
           failf(data, "OpenHiTLS: Failed to add CA certificate from "
-                "PKCS#12 chain (error: 0x%x)", ret);
+                "PKCS#12 chain (error: 0x%x)", (unsigned int)ret);
           /* Continue processing other certificates */
         }
       }
@@ -480,6 +492,7 @@ cleanup:
   /* Clean up resources - openHiTLS handles reference counting */
   if(p12)
     HITLS_PKCS12_Free(p12);
+  curlx_free(key_passwd_copy);
 
   return result;
 }
@@ -498,7 +511,11 @@ static BSL_UIO_Method *curl_create_uio_method(void)
     return NULL;
   }
 
-  /* Set our custom callbacks */
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+#endif
+  /* Set our custom callbacks. openHiTLS stores callback pointers as void *. */
   if(BSL_UIO_SetMethod(method, BSL_UIO_WRITE_CB,
                        (void *)curl_uio_write) != BSL_SUCCESS ||
      BSL_UIO_SetMethod(method, BSL_UIO_READ_CB,
@@ -512,6 +529,9 @@ static BSL_UIO_Method *curl_create_uio_method(void)
     BSL_UIO_FreeMethod(method);
     return NULL;
   }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
   return method;
 }
@@ -546,11 +566,11 @@ curl_uio_write(BSL_UIO *uio, const void *buf, uint32_t len,
   }
 
   /* Use curl's connection filter to send data */
-  result = Curl_conn_cf_send(cf->next, data, (const char *)buf,
+  result = Curl_conn_cf_send(cf->next, data, (const uint8_t *)buf,
                              (size_t)len, FALSE, &nwritten);
 
-  CURL_TRC_CF(data, cf, "curl_uio_write(len=%u) -> %d, %zu",
-              len, result, nwritten);
+  CURL_TRC_CF(data, cf, "curl_uio_write(len=%u) -> %d, %zu", len,
+              (int)result, nwritten);
 
   if(result == CURLE_OK) {
     *writeLen = (uint32_t)nwritten;
@@ -572,6 +592,7 @@ curl_uio_read(BSL_UIO *uio, void *buf, uint32_t len, uint32_t *readLen)
 {
   struct Curl_cfilter *cf;
   struct Curl_easy *data;
+  struct ssl_connect_data *connssl;
   size_t nread = 0;
   CURLcode result;
 
@@ -584,7 +605,7 @@ curl_uio_read(BSL_UIO *uio, void *buf, uint32_t len, uint32_t *readLen)
   if(!cf) {
     return BSL_UIO_FAIL;
   }
-  struct ssl_connect_data *connssl = cf->ctx;
+  connssl = cf->ctx;
 
   data = CF_DATA_CURRENT(cf);
   if(!data) {
@@ -599,8 +620,8 @@ curl_uio_read(BSL_UIO *uio, void *buf, uint32_t len, uint32_t *readLen)
   result = Curl_conn_cf_recv(cf->next, data, (char *)buf,
                              (size_t)len, &nread);
 
-  CURL_TRC_CF(data, cf, "curl_uio_read(len=%u) -> %d, %zu",
-              len, result, nread);
+  CURL_TRC_CF(data, cf, "curl_uio_read(len=%u) -> %d, %zu", len,
+              (int)result, nread);
 
   /* Before returning server replies to the openHiTLS instance, we need
    * to have setup the x509 store or verification will fail. */
@@ -612,7 +633,7 @@ curl_uio_read(BSL_UIO *uio, void *buf, uint32_t len, uint32_t *readLen)
                                                           hctx->config);
       if(store_result != CURLE_OK) {
         CURL_TRC_CF(data, cf, "X509 store setup failed in UIO read: %d",
-                    store_result);
+                    (int)store_result);
         /* Record error but don't interrupt data transmission, let handshake
          * step handle it */
       }
@@ -730,19 +751,27 @@ void BinLogFixLenFunc(uint32_t logId, uint32_t logLevel, uint32_t logType,
 {
   struct Curl_easy *data = tls_current_data;
   struct Curl_cfilter *cf = tls_current_cf;
+  char msg[512];
+  int len;
+
   if(!data|| !cf) {
     return;
   }
   (void)logType;  /* Currently unused */
-  char msg[512];
-  int len;
 
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
   /* Format the message */
   len = curl_msnprintf(msg, sizeof(msg), (const char *)format,
                   para1, para2, para3, para4);
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
   if(len > 0 && (size_t)len < sizeof(msg)) {
-    CURL_TRC_CF(data, cf, "OpenHiTLS[%u][%d]: %s", logId, logLevel, msg);
+    CURL_TRC_CF(data, cf, "OpenHiTLS[%u][%u]: %s", logId, logLevel, msg);
   }
 }
 
@@ -839,7 +868,7 @@ hitls_shutdown(struct Curl_cfilter *cf, struct Curl_easy *data,
     for(i = 0; i < 10; ++i) {
       nread = 0;
       ret = HITLS_Read(backend->ssl, (uint8_t *)buf, sizeof(buf), &nread);
-      CURL_TRC_CF(data, cf, "OpenHiTLS shutdown not sent, read -> %d", nread);
+      CURL_TRC_CF(data, cf, "OpenHiTLS shutdown not sent, read -> %u", nread);
       if(nread <= 0)
         break;
     }
@@ -897,7 +926,7 @@ hitls_shutdown(struct Curl_cfilter *cf, struct Curl_easy *data,
   for(i = 0; i < 10; ++i) {
     nread = 0;
     ret = HITLS_Read(backend->ssl, (uint8_t *)buf, sizeof(buf), &nread);
-    CURL_TRC_CF(data, cf, "OpenHiTLS shutdown read -> %d (ret=%d)",
+    CURL_TRC_CF(data, cf, "OpenHiTLS shutdown read -> %u (ret=%d)",
                 nread, ret);
     if(nread <= 0)
       break;
@@ -1268,8 +1297,13 @@ hitls_client_cert(struct Curl_easy *data, HITLS_Config *config,
       case HITLS_FILETYPE_PEM:
       case HITLS_FILETYPE_ASN1:
       if(cert_blob) {
+        uint32_t cert_blob_len;
+        if(!hitls_size_to_uint32(cert_blob->len, &cert_blob_len)) {
+          failf(data, "OpenHiTLS: client certificate blob too large");
+          return CURLE_SSL_CERTPROBLEM;
+        }
         ret = HITLS_CFG_UseCertificateChainBuffer(config, cert_blob->data,
-          cert_blob->len, TLS_PARSE_FORMAT_BUTT);
+          cert_blob_len, TLS_PARSE_FORMAT_BUTT);
         if(ret != HITLS_SUCCESS) {
           failf(data, "OpenHiTLS: Failed to load client certificate");
           return CURLE_SSL_CERTPROBLEM;
@@ -1317,7 +1351,12 @@ hitls_client_cert(struct Curl_easy *data, HITLS_Config *config,
     case HITLS_FILETYPE_PEM:
     case HITLS_FILETYPE_ASN1:
       if(key_blob) {
-        ret = HITLS_CFG_LoadKeyBuffer(config, key_blob->data, key_blob->len,
+        uint32_t key_blob_len;
+        if(!hitls_size_to_uint32(key_blob->len, &key_blob_len)) {
+          failf(data, "OpenHiTLS: private key blob too large");
+          return CURLE_SSL_CERTPROBLEM;
+        }
+        ret = HITLS_CFG_LoadKeyBuffer(config, key_blob->data, key_blob_len,
           (file_type == HITLS_FILETYPE_PEM) ?
           TLS_PARSE_FORMAT_PEM :
           TLS_PARSE_FORMAT_ASN1);
@@ -1398,10 +1437,15 @@ hitls_tlcp_enc_cert(struct Curl_easy *data, HITLS_Config *config,
     case HITLS_FILETYPE_PEM:
     case HITLS_FILETYPE_ASN1:
       if(enc_cert_blob) {
+        uint32_t enc_cert_blob_len;
+        if(!hitls_size_to_uint32(enc_cert_blob->len, &enc_cert_blob_len)) {
+          failf(data, "OpenHiTLS: TLCP encryption certificate blob too large");
+          return CURLE_SSL_CERTPROBLEM;
+        }
         /* Load from memory blob */
         encCert = HITLS_CFG_ParseCert(config,
                                      enc_cert_blob->data,
-                                     (uint32_t)enc_cert_blob->len,
+                                     enc_cert_blob_len,
                                      TLS_PARSE_TYPE_BUFF,
                                      TLS_PARSE_FORMAT_BUTT);
         if(!encCert) {
@@ -1412,10 +1456,16 @@ hitls_tlcp_enc_cert(struct Curl_easy *data, HITLS_Config *config,
         infof(data, " TLCP encryption certificate loaded from memory blob");
       }
       else {
+        uint32_t enc_cert_file_len;
+        if(!hitls_size_to_uint32(strlen(enc_cert_file) + 1,
+                                 &enc_cert_file_len)) {
+          failf(data, "OpenHiTLS: TLCP encryption certificate path too long");
+          return CURLE_SSL_CERTPROBLEM;
+        }
         /* Load from file */
         encCert = HITLS_CFG_ParseCert(config,
                                      (const uint8_t *)enc_cert_file,
-                                     strlen(enc_cert_file) + 1,
+                                     enc_cert_file_len,
                                      TLS_PARSE_TYPE_FILE,
                                      TLS_PARSE_FORMAT_BUTT);
         if(!encCert) {
@@ -1462,9 +1512,14 @@ hitls_tlcp_enc_cert(struct Curl_easy *data, HITLS_Config *config,
     case HITLS_FILETYPE_PEM:
     case HITLS_FILETYPE_ASN1:
       if(enc_key_blob) {
+        uint32_t enc_key_blob_len;
+        if(!hitls_size_to_uint32(enc_key_blob->len, &enc_key_blob_len)) {
+          failf(data, "OpenHiTLS: TLCP encryption private key blob too large");
+          return CURLE_SSL_CERTPROBLEM;
+        }
         /* Load from memory blob */
         encKey = HITLS_CFG_ParseKey(config, enc_key_blob->data,
-                   (uint32_t)enc_key_blob->len, TLS_PARSE_TYPE_BUFF,
+                   enc_key_blob_len, TLS_PARSE_TYPE_BUFF,
                    (file_type == HITLS_FILETYPE_PEM) ?
                    TLS_PARSE_FORMAT_PEM : TLS_PARSE_FORMAT_ASN1);
         if(!encKey) {
@@ -1475,9 +1530,15 @@ hitls_tlcp_enc_cert(struct Curl_easy *data, HITLS_Config *config,
         infof(data, " TLCP encryption private key loaded from memory blob");
       }
       else {
+        uint32_t enc_key_file_len;
+        if(!hitls_size_to_uint32(strlen(enc_key_file) + 1,
+                                 &enc_key_file_len)) {
+          failf(data, "OpenHiTLS: TLCP encryption private key path too long");
+          return CURLE_SSL_CERTPROBLEM;
+        }
         /* Load from file */
         encKey = HITLS_CFG_ParseKey(config, (const uint8_t *)enc_key_file,
-                   strlen(enc_key_file) + 1, TLS_PARSE_TYPE_FILE,
+                   enc_key_file_len, TLS_PARSE_TYPE_FILE,
                    (file_type == HITLS_FILETYPE_PEM) ?
                    TLS_PARSE_FORMAT_PEM : TLS_PARSE_FORMAT_ASN1);
         if(!encKey) {
@@ -1674,7 +1735,7 @@ hitls_sigalg_lookup(HITLS_Config *config, const char *token,
     if(!name)
       return CURLE_OUT_OF_MEMORY;
     result = hitls_sigalg_get_by_name(config, name, id, found);
-    free(name);
+    curlx_free(name);
     return result;
   }
 }
@@ -1806,7 +1867,7 @@ hitls_verifyhost(struct Curl_easy *data, struct connectdata *conn,
 
   default:
     DEBUGASSERT(0);
-    failf(data, "unexpected ssl peer type: %d", peer->type);
+    failf(data, "unexpected ssl peer type: %u", peer->type);
     result = CURLE_PEER_FAILED_VERIFICATION;
     break;
   }
@@ -2220,7 +2281,7 @@ Curl_hitls_check_peer_cert(struct Curl_cfilter *cf, struct Curl_easy *data,
     HITLS_ERROR verify_result;
     int ret = HITLS_GetVerifyResult(hctx->ssl, &verify_result);
     if(ret != HITLS_SUCCESS || verify_result != HITLS_SUCCESS) {
-      failf(data, "OpenHiTLS: Certificate verification failed: %d",
+      failf(data, "OpenHiTLS: Certificate verification failed: %u",
             verify_result);
       result = CURLE_PEER_FAILED_VERIFICATION;
       goto cleanup;
@@ -2439,7 +2500,8 @@ hitls_recv(struct Curl_cfilter *cf, struct Curl_easy *data,
   }
 
   CURL_TRC_CF(data, cf, "hitls_recv(len=%zu) -> %d, %zu (input_pending=%d)",
-              buffersize, result, *nread, connssl->input_pending);
+              buffersize, (int)result, *nread,
+              connssl->input_pending ? 1 : 0);
 
   return result;
 }
