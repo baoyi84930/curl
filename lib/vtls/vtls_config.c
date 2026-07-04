@@ -133,6 +133,13 @@ void Curl_ssl_config_cleanup(struct ssl_primary_config *sslc)
     curlx_safefree(sslc->key);
     curlx_safefree(sslc->key_type);
     curlx_safefree(sslc->key_passwd);
+#ifdef USE_OPENHITLS
+    curlx_safefree(sslc->tlcp_enc_cert);
+    curlx_safefree(sslc->tlcp_enc_key);
+    curlx_safefree(sslc->tlcp_enc_key_passwd);
+    curlx_safefree(sslc->tlcp_enc_cert_blob);
+    curlx_safefree(sslc->tlcp_enc_key_blob);
+#endif
 #ifdef USE_TLS_SRP
     curlx_safefree(sslc->username);
     curlx_safefree(sslc->password);
@@ -173,6 +180,14 @@ static bool match_ssl_primary_config(struct Curl_easy *data,
      curl_strequal(c1->cert_type, c2->cert_type) &&
      Curl_safecmp(c1->key, c2->key) &&
      curl_strequal(c1->key_type, c2->key_type) &&
+#ifdef USE_OPENHITLS
+     Curl_safecmp(c1->tlcp_enc_cert, c2->tlcp_enc_cert) &&
+     Curl_safecmp(c1->tlcp_enc_key, c2->tlcp_enc_key) &&
+     !Curl_timestrcmp(c1->tlcp_enc_key_passwd,
+                      c2->tlcp_enc_key_passwd) &&
+     blobcmp(c1->tlcp_enc_cert_blob, c2->tlcp_enc_cert_blob) &&
+     blobcmp(c1->tlcp_enc_key_blob, c2->tlcp_enc_key_blob) &&
+#endif
      !Curl_timestrcmp(c1->key_passwd, c2->key_passwd))
     return TRUE;
 
@@ -226,6 +241,13 @@ static bool clone_ssl_primary_config(struct ssl_primary_config *source,
   CLONE_STRING(key_type);
   CLONE_STRING(key_passwd);
   CLONE_BLOB(key_blob);
+#ifdef USE_OPENHITLS
+  CLONE_STRING(tlcp_enc_cert);
+  CLONE_STRING(tlcp_enc_key);
+  CLONE_STRING(tlcp_enc_key_passwd);
+  CLONE_BLOB(tlcp_enc_cert_blob);
+  CLONE_BLOB(tlcp_enc_key_blob);
+#endif
 #ifdef USE_TLS_SRP
   CLONE_STRING(username);
   CLONE_STRING(password);
@@ -307,6 +329,14 @@ CURLcode Curl_ssl_easy_config_complete(struct Curl_easy *data,
     sslc->primary.key_passwd = data->set.str[STRING_KEY_PASSWD];
     sslc->primary.clientcert = data->set.str[STRING_CERT];
     sslc->primary.key_blob = data->set.blobs[BLOB_KEY];
+#ifdef USE_OPENHITLS
+    sslc->primary.tlcp_enc_cert = data->set.str[STRING_TLCP_ENC_CERT];
+    sslc->primary.tlcp_enc_key = data->set.str[STRING_TLCP_ENC_KEY];
+    sslc->primary.tlcp_enc_key_passwd =
+      data->set.str[STRING_TLCP_ENC_KEY_PASSWD];
+    sslc->primary.tlcp_enc_cert_blob = NULL;
+    sslc->primary.tlcp_enc_key_blob = NULL;
+#endif
 #ifdef USE_TLS_SRP
     sslc->primary.username = data->set.str[STRING_TLSAUTH_USERNAME];
     sslc->primary.password = data->set.str[STRING_TLSAUTH_PASSWORD];
@@ -321,6 +351,13 @@ CURLcode Curl_ssl_easy_config_complete(struct Curl_easy *data,
     sslc->primary.key_passwd = NULL;
     sslc->primary.clientcert = NULL;
     sslc->primary.key_blob = NULL;
+#ifdef USE_OPENHITLS
+    sslc->primary.tlcp_enc_cert = NULL;
+    sslc->primary.tlcp_enc_key = NULL;
+    sslc->primary.tlcp_enc_key_passwd = NULL;
+    sslc->primary.tlcp_enc_cert_blob = NULL;
+    sslc->primary.tlcp_enc_key_blob = NULL;
+#endif
 #ifdef USE_TLS_SRP
     sslc->primary.username = NULL;
     sslc->primary.password = NULL;
@@ -370,6 +407,13 @@ CURLcode Curl_ssl_easy_config_complete(struct Curl_easy *data,
   sslc->primary.key_passwd = data->set.str[STRING_KEY_PASSWD_PROXY];
   sslc->primary.clientcert = data->set.str[STRING_CERT_PROXY];
   sslc->primary.key_blob = data->set.blobs[BLOB_KEY_PROXY];
+#ifdef USE_OPENHITLS
+  sslc->primary.tlcp_enc_cert = NULL;
+  sslc->primary.tlcp_enc_key = NULL;
+  sslc->primary.tlcp_enc_key_passwd = NULL;
+  sslc->primary.tlcp_enc_cert_blob = NULL;
+  sslc->primary.tlcp_enc_key_blob = NULL;
+#endif
 #ifdef USE_TLS_SRP
   sslc->primary.username = data->set.str[STRING_TLSAUTH_USERNAME_PROXY];
   sslc->primary.password = data->set.str[STRING_TLSAUTH_PASSWORD_PROXY];

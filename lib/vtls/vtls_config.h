@@ -43,10 +43,19 @@ struct ssl_primary_config {
   char *key;             /* private key filename */
   char *key_type;        /* format for private key (default: PEM) */
   char *key_passwd;      /* plain text private key password */
+#ifdef USE_OPENHITLS
+  char *tlcp_enc_cert;   /* TLCP encryption certificate filename */
+  char *tlcp_enc_key;    /* TLCP encryption private key filename */
+  char *tlcp_enc_key_passwd; /* TLCP encryption private key password */
+#endif
   struct curl_blob *cert_blob;
   struct curl_blob *ca_info_blob;
   struct curl_blob *issuercert_blob;
   struct curl_blob *key_blob;
+#ifdef USE_OPENHITLS
+  struct curl_blob *tlcp_enc_cert_blob;
+  struct curl_blob *tlcp_enc_key_blob;
+#endif
 #ifdef USE_TLS_SRP
   char *username; /* TLS username (for, e.g., SRP) */
   char *password; /* TLS password (for, e.g., SRP) */

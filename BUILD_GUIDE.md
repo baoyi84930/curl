@@ -69,35 +69,45 @@ project_root/
 
 openHiTLS 是整个项目的基础，必须首先构建和安装。
 
-#### 2.1 编译 openHiTLS 和 Secure_C
+#### 2.1 配置并编译 openHiTLS
 
 ```bash
-cd ${PROJECT_ROOT}/openhitls/testcode/script
-bash build_hitls.sh
+cmake -S ${PROJECT_ROOT}/openhitls -B ${PROJECT_ROOT}/openhitls/build \
+    -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX} \
+    -DHITLS_BUILD_PROFILE=full \
+    -DHITLS_BUILD_SHARED=ON \
+    -DHITLS_BUILD_STATIC=ON \
+    -DHITLS_BUILD_GEN_INFO=ON \
+    -DHITLS_EAL_INIT_OPTS=9 \
+    -DHITLS_CRYPTO_RAND_CB=ON \
+    -DHITLS_CRYPTO_ENTROPY=ON \
+    -DHITLS_CRYPTO_ENTROPY_DEVRANDOM=ON \
+    -DHITLS_CRYPTO_ENTROPY_GETENTROPY=ON \
+    -DHITLS_CRYPTO_ENTROPY_SYS=ON \
+    -DHITLS_CRYPTO_ENTROPY_HARDWARE=ON \
+    -DHITLS_CRYPTO_DRBG_GM=ON \
+    -DHITLS_TLS_FEATURE_SM_TLS13=ON \
+    -DHITLS_BSL_UIO_SCTP=ON
+
+cmake --build ${PROJECT_ROOT}/openhitls/build --parallel $(nproc)
 ```
 
 #### 2.2 安装 openHiTLS 到指定目录
 
 ```bash
-cd ../../build
-cmake .. -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}
-make -j$(nproc)
-make install
+cmake --install ${PROJECT_ROOT}/openhitls/build
 ```
 
 参数说明：
 - `-DCMAKE_INSTALL_PREFIX`: 指定安装目录
+- `-DHITLS_BUILD_PROFILE=full`: 使用 openHiTLS full profile，启用 curl 适配所需的 TLS、PKI、密码算法和 TLCP 能力
+- `-DHITLS_BUILD_SHARED=ON`: 构建动态库，供 curl 运行时加载
+- `-DHITLS_BUILD_STATIC=ON`: 同时构建静态库，便于后续静态链接验证
+- `-DHITLS_TLS_FEATURE_SM_TLS13=ON`: 启用国密 TLS 1.3 相关能力
+- `-DHITLS_BSL_UIO_SCTP=ON`: 保持 SCTP UIO 能力，与当前 openHiTLS full/test 构建参数一致
 - `-j$(nproc)`: 使用所有 CPU 核心并行编译
 
-#### 2.3 安装 Secure_C 依赖库
-
-openHiTLS 依赖 Secure_C 库提供安全的字符串操作函数：
-
-```bash
-cd ${PROJECT_ROOT}
-cp openhitls/platform/Secure_C/include/* ${INSTALL_PREFIX}/include/
-cp openhitls/platform/Secure_C/lib/* ${INSTALL_PREFIX}/lib/
-```
+当前 openHiTLS 已不再依赖外部 Secure_C，不需要复制 `platform/Secure_C` 的头文件或库文件。
 
 **验证 openHiTLS 安装：**
 ```bash
@@ -235,7 +245,7 @@ perl runtests.pl -c ../src/.libs/curl
 待补充
 
 本构建指导基于：
-- curl 8.x
+- curl 8.21.0 / master 适配分析
 - openHiTLS 主分支
 - nghttp2 1.x
 

@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "../curl_setup.h"
+#include "curl_setup.h"
 
 #ifdef USE_OPENHITLS
 
@@ -54,22 +54,20 @@
 #include <bsl/bsl_list.h>
 /* Removed PKI module direct includes to avoid mixing interfaces */
 
-#include "../urldata.h"
-#include "../sendf.h"
-#include "../multiif.h"
-#include "../cfilters.h"
-#include "../connect.h"
+#include "urldata.h"
+#include "sendf.h"
+#include "multiif.h"
+#include "cfilters.h"
+#include "connect.h"
+#include "curl_trc.h"
+#include "curl_sha256.h"
 #include "vtls.h"
 #include "vtls_int.h"
 #include "x509asn1.h"
 #include "cipher_suite.h"
 #include "keylog.h"
-#include "../curl_printf.h"
+#include "curl_printf.h"
 #include "openhitls.h"
-
-/* The last #include files should be: */
-#include "../curl_memory.h"
-#include "../memdebug.h"
 
 /*
  * Thread-Local Storage (TLS) for logging context
@@ -1522,8 +1520,8 @@ validate_tlcp_config(struct Curl_easy *data,
 {
   bool has_enc_cert = (ssl_config->primary.tlcp_enc_cert != NULL ||
                        ssl_config->primary.tlcp_enc_cert_blob != NULL);
-  bool has_enc_key = (ssl_config->tlcp_enc_key != NULL ||
-                      ssl_config->tlcp_enc_key_blob != NULL);
+  bool has_enc_key = (ssl_config->primary.tlcp_enc_key != NULL ||
+                      ssl_config->primary.tlcp_enc_key_blob != NULL);
 
   /* If any TLCP encryption parameter is configured, both cert and key must
      be present */
@@ -1549,9 +1547,9 @@ hitls_verifyhost(struct Curl_easy *data, struct connectdata *conn,
 
   (void)conn;
 
-  DEBUGASSERT(peer && peer->hostname && server_cert);
+  DEBUGASSERT(peer && peer->origin && peer->origin->hostname && server_cert);
 
-  hostlen = strlen(peer->hostname);
+  hostlen = strlen(peer->origin->hostname);
 
   switch(peer->type) {
   case CURL_SSL_PEER_DNS: {
@@ -1561,16 +1559,17 @@ hitls_verifyhost(struct Curl_easy *data, struct connectdata *conn,
     /* HITLS_CERT_X509 is typedef void*, cast to HITLS_X509_Cert* */
     HITLS_X509_Cert *cert = (HITLS_X509_Cert *)server_cert;
 
-    ret = HITLS_X509_VerifyHostname(cert, flags, peer->hostname,
+    ret = HITLS_X509_VerifyHostname(cert, flags, peer->origin->hostname,
                                     (uint32_t)hostlen);
 
     if(ret == HITLS_PKI_SUCCESS) {
-      infof(data, " OpenHiTLS: verified hostname \"%s\"", peer->dispname);
+      infof(data, " OpenHiTLS: verified hostname \"%s\"",
+            peer->origin->user_hostname);
       result = CURLE_OK;
     }
     else {
       failf(data, "SSL: certificate subject name does not match "
-            "target hostname '%s'", peer->dispname);
+            "target hostname '%s'", peer->origin->user_hostname);
       result = CURLE_PEER_FAILED_VERIFICATION;
     }
     break;
@@ -1743,6 +1742,19 @@ Curl_hitls_ctx_init(struct hitls_ctx *hctx, struct Curl_cfilter *cf,
     }
   }
 
+  /* Configure curves/groups if specified (--curves) */
+  if(conn_config->curves) {
+    uint32_t len = (uint32_t)strlen(conn_config->curves);
+    int32_t ret = HITLS_CFG_SetGroupList(hctx->config,
+                                         conn_config->curves, len);
+    if(ret != HITLS_SUCCESS) {
+      failf(data, "OpenHiTLS: Failed to set curves list '%s' (error: %d)",
+            conn_config->curves, ret);
+      return CURLE_SSL_CIPHER;
+    }
+    infof(data, "OpenHiTLS: Curve/Group selection: %s", conn_config->curves);
+  }
+
 #ifdef USE_OPENHITLS
   /* Validate TLCP configuration before proceeding */
   result = validate_tlcp_config(data, ssl_config);
@@ -1755,11 +1767,11 @@ Curl_hitls_ctx_init(struct hitls_ctx *hctx, struct Curl_cfilter *cf,
     result = hitls_client_cert(data, hctx->config,
                                ssl_config->primary.clientcert,
                                ssl_config->primary.cert_blob,
-                               ssl_config->cert_type,
-                               ssl_config->key,
-                               ssl_config->key_blob,
-                               ssl_config->key_type,
-                               ssl_config->key_passwd);
+                               ssl_config->primary.cert_type,
+                               ssl_config->primary.key,
+                               ssl_config->primary.key_blob,
+                               ssl_config->primary.key_type,
+                               ssl_config->primary.key_passwd);
     if(result != CURLE_OK)
       return result;
   }
@@ -1771,10 +1783,10 @@ Curl_hitls_ctx_init(struct hitls_ctx *hctx, struct Curl_cfilter *cf,
     result = hitls_tlcp_enc_cert(data, hctx->config,
                                 ssl_config->primary.tlcp_enc_cert,
                                 ssl_config->primary.tlcp_enc_cert_blob,
-                                ssl_config->cert_type, /* reuse cert type */
-                                ssl_config->tlcp_enc_key,
-                                ssl_config->tlcp_enc_key_blob,
-                                ssl_config->tlcp_enc_key_passwd);
+                                ssl_config->primary.cert_type,
+                                ssl_config->primary.tlcp_enc_key,
+                                ssl_config->primary.tlcp_enc_key_blob,
+                                ssl_config->primary.tlcp_enc_key_passwd);
     if(result != CURLE_OK)
       return result;
   }
