@@ -977,73 +977,39 @@ if(CURL_USE_RUSTLS)
 endif()
 
 if(CURL_USE_OPENHITLS)
-  find_path(OPENHITLS_INCLUDE_DIR NAMES hitls/tls/hitls.h)
-  find_library(OPENHITLS_TLS_LIBRARY NAMES hitls_tls)
-  find_library(OPENHITLS_PKI_LIBRARY NAMES hitls_pki)
-  find_library(OPENHITLS_CRYPTO_LIBRARY NAMES hitls_crypto)
-  find_library(OPENHITLS_BSL_LIBRARY NAMES hitls_bsl)
-
-  if(OPENHITLS_INCLUDE_DIR AND
-     OPENHITLS_TLS_LIBRARY AND
-     OPENHITLS_PKI_LIBRARY AND
-     OPENHITLS_CRYPTO_LIBRARY AND
-     OPENHITLS_BSL_LIBRARY)
-    cmake_push_check_state()
-    list(APPEND CMAKE_REQUIRED_INCLUDES
-      "${OPENHITLS_INCLUDE_DIR}"
-      "${OPENHITLS_INCLUDE_DIR}/hitls"
-      "${OPENHITLS_INCLUDE_DIR}/hitls/tls"
-      "${OPENHITLS_INCLUDE_DIR}/hitls/pki"
-      "${OPENHITLS_INCLUDE_DIR}/hitls/crypto"
-      "${OPENHITLS_INCLUDE_DIR}/hitls/bsl")
-    list(APPEND CMAKE_REQUIRED_LIBRARIES
-      "${OPENHITLS_TLS_LIBRARY}"
-      "${OPENHITLS_PKI_LIBRARY}"
-      "${OPENHITLS_CRYPTO_LIBRARY}"
-      "${OPENHITLS_BSL_LIBRARY}")
-    check_c_source_compiles("
-      #include <bsl/bsl_version.h>
-      #include <tls/hitls.h>
-      #include <tls/hitls_config.h>
-      #if OPENHITLS_VERSION_I < 0x00400000ULL
-      #error openHiTLS 0.4.0 or later required
-      #endif
-      int main(void)
-      {
-        HITLS_Config *config = HITLS_CFG_NewTLSConfig();
-        HITLS_Ctx *ctx = HITLS_New(config);
-        if(ctx)
-          HITLS_Free(ctx);
-        if(config)
-          HITLS_CFG_FreeConfig(config);
-        return 0;
-      }" HAVE_OPENHITLS_0_4_0)
-    cmake_pop_check_state()
-    if(NOT HAVE_OPENHITLS_0_4_0)
-      message(FATAL_ERROR "openHiTLS 0.4.0 or later is required.")
-    endif()
-
-    set(_ssl_enabled ON)
-    set(USE_OPENHITLS ON)
-    list(APPEND CURL_LIBS
-      ${OPENHITLS_TLS_LIBRARY}
-      ${OPENHITLS_PKI_LIBRARY}
-      ${OPENHITLS_CRYPTO_LIBRARY}
-      ${OPENHITLS_BSL_LIBRARY})
-    include_directories(SYSTEM ${OPENHITLS_INCLUDE_DIR})
-    include_directories(SYSTEM ${OPENHITLS_INCLUDE_DIR}/hitls)
-    include_directories(SYSTEM ${OPENHITLS_INCLUDE_DIR}/hitls/tls)
-    include_directories(SYSTEM ${OPENHITLS_INCLUDE_DIR}/hitls/pki)
-    include_directories(SYSTEM ${OPENHITLS_INCLUDE_DIR}/hitls/crypto)
-    include_directories(SYSTEM ${OPENHITLS_INCLUDE_DIR}/hitls/bsl)
-
-    if(CURL_DEFAULT_SSL_BACKEND AND CURL_DEFAULT_SSL_BACKEND STREQUAL "openhitls")
-      set(_valid_default_ssl_backend TRUE)
-    endif()
-    set(_curl_ca_bundle_supported TRUE)
-  else()
-    message(FATAL_ERROR "Could not find openHiTLS. Make sure the openHiTLS libraries and headers are installed.")
+  find_package(OpenHiTLS 0.4.0 MODULE REQUIRED)
+  cmake_push_check_state()
+  list(APPEND CMAKE_REQUIRED_LIBRARIES CURL::openhitls)
+  check_c_source_compiles("
+    #include <bsl/bsl_version.h>
+    #include <tls/hitls.h>
+    #include <tls/hitls_config.h>
+    #if OPENHITLS_VERSION_I < 0x00400000ULL
+    #error openHiTLS 0.4.0 or later required
+    #endif
+    int main(void)
+    {
+      HITLS_Config *config = HITLS_CFG_NewTLSConfig();
+      HITLS_Ctx *ctx = HITLS_New(config);
+      if(ctx)
+        HITLS_Free(ctx);
+      if(config)
+        HITLS_CFG_FreeConfig(config);
+      return 0;
+    }" HAVE_OPENHITLS_0_4_0)
+  cmake_pop_check_state()
+  if(NOT HAVE_OPENHITLS_0_4_0)
+    message(FATAL_ERROR "openHiTLS 0.4.0 or later is required.")
   endif()
+
+  set(_ssl_enabled ON)
+  set(USE_OPENHITLS ON)
+  list(APPEND CURL_LIBS CURL::openhitls)
+
+  if(CURL_DEFAULT_SSL_BACKEND AND CURL_DEFAULT_SSL_BACKEND STREQUAL "openhitls")
+    set(_valid_default_ssl_backend TRUE)
+  endif()
+  set(_curl_ca_bundle_supported TRUE)
 endif()
 
 # Set general SSL flag when any SSL backend is enabled
@@ -2483,6 +2449,7 @@ if(NOT CURL_DISABLE_INSTALL)
   #   USE_LIBSSH2
   #   USE_LIBUV
   #   USE_MBEDTLS
+  #   USE_OPENHITLS
   #   USE_NGHTTP2
   #   USE_NGHTTP3
   #   USE_NGTCP2 NGTCP2_CRYPTO_BACKEND
@@ -2523,6 +2490,7 @@ if(NOT CURL_DISABLE_INSTALL)
       "${PROJECT_SOURCE_DIR}/CMake/FindNGHTTP3.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindNGTCP2.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindNettle.cmake"
+      "${PROJECT_SOURCE_DIR}/CMake/FindOpenHiTLS.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindQuiche.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindRustls.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindWolfSSL.cmake"
