@@ -96,25 +96,20 @@ if test "x$OPT_OPENHITLS" != xno; then
       LIBS="$addlib $LIBS"
       AC_MSG_NOTICE([Add $addlib to LIBS])
 
-      AC_MSG_CHECKING([for HITLS_New in -lhitls_tls])
-      AC_LINK_IFELSE([
+      openhitls_version_ok=no
+      AC_MSG_CHECKING([for openHiTLS >= 0.4.0])
+      AC_COMPILE_IFELSE([
         AC_LANG_PROGRAM([[
-          #include <tls/hitls.h>
-          #include <tls/hitls_config.h>
+          #include <bsl/bsl_version.h>
+          #if OPENHITLS_VERSION_I < 0x00400000ULL
+          #error openHiTLS 0.4.0 or later required
+          #endif
         ]],[[
-          HITLS_Config *config = HITLS_CFG_NewTLSConfig();
-          HITLS_Ctx *ctx = HITLS_New(config);
-          if(ctx) HITLS_Free(ctx);
-          if(config) HITLS_CFG_FreeConfig(config);
           return 0;
         ]])
       ],[
         AC_MSG_RESULT(yes)
-        AC_DEFINE(USE_OPENHITLS, 1, [if openHiTLS is enabled])
-        OPENHITLS_ENABLED=1
-        USE_OPENHITLS="yes"
-        ssl_msg="openHiTLS"
-        test openhitls != "$DEFAULT_SSL_BACKEND" || VALID_DEFAULT_SSL_BACKEND=yes
+        openhitls_version_ok=yes
       ],
       [
         AC_MSG_RESULT(no)
@@ -123,6 +118,42 @@ if test "x$OPT_OPENHITLS" != xno; then
         LDFLAGSPC=$_ldflagspc
         openhitlslibpath=""
       ])
+
+      if test "x$openhitls_version_ok" = "xyes"; then
+        AC_MSG_CHECKING([for HITLS_New in openHiTLS])
+        AC_LINK_IFELSE([
+          AC_LANG_PROGRAM([[
+            #include <tls/hitls.h>
+            #include <tls/hitls_config.h>
+            #include <bsl/bsl_version.h>
+            #if OPENHITLS_VERSION_I < 0x00400000ULL
+            #error openHiTLS 0.4.0 or later required
+            #endif
+          ]],[[
+            HITLS_Config *config = HITLS_CFG_NewTLSConfig();
+            HITLS_Ctx *ctx = HITLS_New(config);
+            if(ctx) HITLS_Free(ctx);
+            if(config) HITLS_CFG_FreeConfig(config);
+            return 0;
+          ]])
+        ],[
+          AC_MSG_RESULT(yes)
+          AC_DEFINE(USE_OPENHITLS, 1, [if openHiTLS is enabled])
+          OPENHITLS_ENABLED=1
+          USE_OPENHITLS="yes"
+          ssl_msg="openHiTLS"
+          test openhitls != "$DEFAULT_SSL_BACKEND" || VALID_DEFAULT_SSL_BACKEND=yes
+        ],
+        [
+          AC_MSG_RESULT(no)
+          CPPFLAGS=$_cppflags
+          LDFLAGS=$_ldflags
+          LDFLAGSPC=$_ldflagspc
+          openhitlslibpath=""
+        ])
+      else
+        AC_MSG_NOTICE([openHiTLS version too old])
+      fi
       LIBS="$my_ac_save_LIBS"
     fi
 
@@ -141,6 +172,7 @@ if test "x$OPT_OPENHITLS" != xno; then
                       HITLS_SetAlpnProtos \
                       HITLS_CFG_LoadCertFile \
                       HITLS_CFG_LoadKeyFile \
+                      HITLS_CFG_GetSignatureSchemeId \
                       HITLS_CFG_ParseCAList])
 
       if test -n "$openhitlslibpath"; then

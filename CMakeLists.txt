@@ -988,6 +988,41 @@ if(CURL_USE_OPENHITLS)
      OPENHITLS_PKI_LIBRARY AND
      OPENHITLS_CRYPTO_LIBRARY AND
      OPENHITLS_BSL_LIBRARY)
+    cmake_push_check_state()
+    list(APPEND CMAKE_REQUIRED_INCLUDES
+      "${OPENHITLS_INCLUDE_DIR}"
+      "${OPENHITLS_INCLUDE_DIR}/hitls"
+      "${OPENHITLS_INCLUDE_DIR}/hitls/tls"
+      "${OPENHITLS_INCLUDE_DIR}/hitls/pki"
+      "${OPENHITLS_INCLUDE_DIR}/hitls/crypto"
+      "${OPENHITLS_INCLUDE_DIR}/hitls/bsl")
+    list(APPEND CMAKE_REQUIRED_LIBRARIES
+      "${OPENHITLS_TLS_LIBRARY}"
+      "${OPENHITLS_PKI_LIBRARY}"
+      "${OPENHITLS_CRYPTO_LIBRARY}"
+      "${OPENHITLS_BSL_LIBRARY}")
+    check_c_source_compiles("
+      #include <bsl/bsl_version.h>
+      #include <tls/hitls.h>
+      #include <tls/hitls_config.h>
+      #if OPENHITLS_VERSION_I < 0x00400000ULL
+      #error openHiTLS 0.4.0 or later required
+      #endif
+      int main(void)
+      {
+        HITLS_Config *config = HITLS_CFG_NewTLSConfig();
+        HITLS_Ctx *ctx = HITLS_New(config);
+        if(ctx)
+          HITLS_Free(ctx);
+        if(config)
+          HITLS_CFG_FreeConfig(config);
+        return 0;
+      }" HAVE_OPENHITLS_0_4_0)
+    cmake_pop_check_state()
+    if(NOT HAVE_OPENHITLS_0_4_0)
+      message(FATAL_ERROR "openHiTLS 0.4.0 or later is required.")
+    endif()
+
     set(_ssl_enabled ON)
     set(USE_OPENHITLS ON)
     list(APPEND CURL_LIBS
