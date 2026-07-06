@@ -167,7 +167,7 @@ AC_SUBST(VERSIONNUM)
 
 dnl
 dnl initialize all the info variables
-         curl_ssl_msg="no       (--with-{openssl,gnutls,mbedtls,wolfssl,schannel,amissl,rustls} )"
+         curl_ssl_msg="no       (--with-{openssl,gnutls,mbedtls,wolfssl,schannel,amissl,rustls,openhitls} )"
          curl_ssh_msg="no       (--with-{libssh,libssh2})"
         curl_zlib_msg="no       (--with-zlib)"
       curl_brotli_msg="no       (--with-brotli)"
@@ -2797,6 +2797,8 @@ AS_HELP_STRING([--disable-versioned-symbols], [Disable versioned symbols in shar
         versioned_symbols_flavor="MULTISSL_"
       elif test "$OPENSSL_ENABLED" = "1"; then
         versioned_symbols_flavor="OPENSSL_"
+      elif test "$OPENHITLS_ENABLED" = "1"; then
+        versioned_symbols_flavor="OPENHITLS_"
       elif test "$MBEDTLS_ENABLED" = "1"; then
         versioned_symbols_flavor="MBEDTLS_"
       elif test "$WOLFSSL_ENABLED" = "1"; then
