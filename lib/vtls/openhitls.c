@@ -39,6 +39,7 @@
 #include <crypto/crypt_eal_init.h>
 #include <crypto/crypt_eal_rand.h>
 #include <crypto/crypt_eal_md.h>
+#include <crypto/crypt_eal_codecs.h>
 #include <crypto/crypt_algid.h>
 #include <bsl/bsl_uio.h>
 #include <bsl/bsl_sal.h>
@@ -297,6 +298,46 @@ next_cert:
   return CURLE_OK;
 }
 
+static CURLcode
+hitls_check_pinned_pubkey(struct Curl_cfilter *cf, struct Curl_easy *data,
+                          HITLS_CERT_X509 *server_cert)
+{
+  struct ssl_config_data *ssl_config = Curl_ssl_cf_get_config(cf, data);
+  const char * const pinnedpubkey = ssl_config->primary.pinned_key;
+  CRYPT_EAL_PkeyCtx *pubkey = NULL;
+  BSL_Buffer pubkey_der = { 0 };
+  CURLcode result = CURLE_OK;
+  int32_t ret;
+
+  if(!pinnedpubkey)
+    return CURLE_OK;
+
+  ret = HITLS_X509_CertCtrl(server_cert, HITLS_X509_GET_PUBKEY,
+                            &pubkey, sizeof(pubkey));
+  if(ret != HITLS_SUCCESS || !pubkey) {
+    failf(data, "OpenHiTLS: failed retrieving public key from certificate");
+    return CURLE_SSL_PINNEDPUBKEYNOTMATCH;
+  }
+
+  ret = CRYPT_EAL_EncodeBuffKey(pubkey, NULL, BSL_FORMAT_ASN1,
+                                CRYPT_PUBKEY_SUBKEY, &pubkey_der);
+  if(ret != CRYPT_SUCCESS || !pubkey_der.data || !pubkey_der.dataLen) {
+    failf(data, "OpenHiTLS: failed encoding public key from certificate");
+    result = CURLE_SSL_PINNEDPUBKEYNOTMATCH;
+    goto cleanup;
+  }
+
+  result = Curl_pin_peer_pubkey(data, pinnedpubkey,
+                                pubkey_der.data, pubkey_der.dataLen);
+  if(result)
+    failf(data, "SSL: public key does not match pinned public key");
+
+cleanup:
+  BSL_SAL_FREE(pubkey_der.data);
+  CRYPT_EAL_PkeyFreeCtx(pubkey);
+  return result;
+}
+
 /* Map openHiTLS error codes to curl error codes */
 static CURLcode
 hitls_translate_error(int hitls_error)
@@ -309,6 +350,9 @@ hitls_translate_error(int hitls_error)
     case HITLS_WANT_READ:
     case HITLS_WANT_WRITE:
       return CURLE_AGAIN;
+    case HITLS_CM_LINK_CLOSED:
+    case HITLS_REC_NORMAL_IO_EOF:
+      return CURLE_OK;
     default:
       return CURLE_SSL_CONNECT_ERROR;
   }
@@ -1230,9 +1274,13 @@ hitls_populate_ca_store(struct Curl_cfilter *cf, struct Curl_easy *data,
         failf(data, "OpenHiTLS: Failed to load CRL file: %s", ssl_crlfile);
         return CURLE_SSL_CRL_BADFILE;
       }
-      /* Note: CRL verification is automatically enabled when CRL file is
-       * configured */
-      infof(data, " CRLfile: %s loaded", ssl_crlfile);
+      ret = HITLS_CFG_SetVerifyFlags(config, HITLS_X509_VFY_FLAG_CRL_ALL);
+      if(ret != HITLS_SUCCESS) {
+        failf(data, "OpenHiTLS: Failed to enable CRL verification: %s",
+              ssl_crlfile);
+        return CURLE_SSL_CRL_BADFILE;
+      }
+      infof(data, " CRLfile: %s", ssl_crlfile);
     }
 
     /* Set verification parameters */
@@ -2260,7 +2308,7 @@ Curl_hitls_check_peer_cert(struct Curl_cfilter *cf, struct Curl_easy *data,
   HITLS_CERT_X509 *server_cert = NULL;
   CURLcode result = CURLE_OK;
 
-  if(!data->set.ssl.certinfo)
+  if(data->set.ssl.certinfo)
     (void)hitls_certchain(cf, data, hctx);
 
   /* Get server certificate */
@@ -2295,6 +2343,9 @@ Curl_hitls_check_peer_cert(struct Curl_cfilter *cf, struct Curl_easy *data,
       goto cleanup;
   }
 
+  result = hitls_check_pinned_pubkey(cf, data, server_cert);
+  if(result)
+    goto cleanup;
 
 cleanup:
   if(server_cert) {
@@ -2487,6 +2538,10 @@ hitls_recv(struct Curl_cfilter *cf, struct Curl_easy *data,
     result = CURLE_AGAIN;
     connssl->io_need = CURL_SSL_IO_NEED_SEND;
   }
+  else if(ret == HITLS_CM_LINK_CLOSED ||
+          ret == HITLS_REC_NORMAL_IO_EOF) {
+    *nread = 0;
+  }
   else {
     /* Error occurred */
     int hitls_error = HITLS_GetError(backend->ssl, ret);
@@ -2578,10 +2633,12 @@ const struct Curl_ssl Curl_ssl_openhitls = {
   SSLSUPP_CERTINFO |
   SSLSUPP_SSL_CTX |
   SSLSUPP_HTTPS_PROXY |
+  SSLSUPP_PINNEDPUBKEY |
   SSLSUPP_TLS13_CIPHERSUITES |
   SSLSUPP_SIGNATURE_ALGORITHMS |
   SSLSUPP_SSL_EC_CURVES |
   SSLSUPP_CIPHER_LIST |
+  SSLSUPP_CRLFILE |
   SSLSUPP_CAINFO_BLOB,
 
   sizeof(struct hitls_ctx),

@@ -28,16 +28,14 @@
 
 #include "first.h"
 
-#include "memdebug.h"
-
 static CURLcode test_lib8002(const char *URL)
 {
   CURL *curl = NULL;
-  CURLcode res = CURLE_OK;
+  CURLcode result = CURLE_OK;
 
   (void)URL; /* not used */
   (void)curl; /* not used */
-  (void)res; /* not used */
+  (void)result; /* not used */
 
 #ifdef USE_OPENHITLS
   /* This test should NOT run when openHiTLS is enabled */
@@ -49,63 +47,63 @@ static CURLcode test_lib8002(const char *URL)
   easy_init(curl);
 
   /* Try to set TLCP encryption certificate on non-openHiTLS backend */
-  res = curl_easy_setopt(curl, CURLOPT_TLCP_ENC_CERT, "test.pem");
-  if(res == CURLE_NOT_BUILT_IN || res == CURLE_UNKNOWN_OPTION) {
+  result = curl_easy_setopt(curl, CURLOPT_TLCP_ENC_CERT, "test.pem");
+  if(result == CURLE_NOT_BUILT_IN || result == CURLE_UNKNOWN_OPTION) {
     /* Expected: option not supported */
     curl_mprintf("TLCP option correctly rejected: CURLOPT_TLCP_ENC_CERT\n");
   }
-  else if(res == CURLE_OK) {
+  else if(result == CURLE_OK) {
     /* Unexpected: option accepted */
     curl_mprintf("ERROR: TLCP option should be rejected on "
                  "non-openHiTLS backend\n");
-    res = TEST_ERR_FAILURE;
+    result = TEST_ERR_FAILURE;
     goto test_cleanup;
   }
   else {
     /* Unexpected error */
-    curl_mprintf("ERROR: Unexpected error code: %d\n", res);
+    curl_mprintf("ERROR: Unexpected error code: %d\n", result);
     goto test_cleanup;
   }
 
   /* Try to set TLCP encryption key */
-  res = curl_easy_setopt(curl, CURLOPT_TLCP_ENC_KEY, "test_key.pem");
-  if(res == CURLE_NOT_BUILT_IN || res == CURLE_UNKNOWN_OPTION) {
+  result = curl_easy_setopt(curl, CURLOPT_TLCP_ENC_KEY, "test_key.pem");
+  if(result == CURLE_NOT_BUILT_IN || result == CURLE_UNKNOWN_OPTION) {
     curl_mprintf("TLCP option correctly rejected: CURLOPT_TLCP_ENC_KEY\n");
   }
-  else if(res == CURLE_OK) {
+  else if(result == CURLE_OK) {
     curl_mprintf("ERROR: TLCP option should be rejected\n");
-    res = TEST_ERR_FAILURE;
+    result = TEST_ERR_FAILURE;
     goto test_cleanup;
   }
   else {
-    curl_mprintf("ERROR: Unexpected error code: %d\n", res);
+    curl_mprintf("ERROR: Unexpected error code: %d\n", result);
     goto test_cleanup;
   }
 
   /* Try to set TLCP encryption key password */
-  res = curl_easy_setopt(curl, CURLOPT_TLCP_ENC_KEYPASSWD, "password");
-  if(res == CURLE_NOT_BUILT_IN || res == CURLE_UNKNOWN_OPTION) {
+  result = curl_easy_setopt(curl, CURLOPT_TLCP_ENC_KEYPASSWD, "password");
+  if(result == CURLE_NOT_BUILT_IN || result == CURLE_UNKNOWN_OPTION) {
     curl_mprintf("TLCP option correctly rejected: "
                  "CURLOPT_TLCP_ENC_KEYPASSWD\n");
   }
-  else if(res == CURLE_OK) {
+  else if(result == CURLE_OK) {
     curl_mprintf("ERROR: TLCP option should be rejected\n");
-    res = TEST_ERR_FAILURE;
+    result = TEST_ERR_FAILURE;
     goto test_cleanup;
   }
   else {
-    curl_mprintf("ERROR: Unexpected error code: %d\n", res);
+    curl_mprintf("ERROR: Unexpected error code: %d\n", result);
     goto test_cleanup;
   }
 
   curl_mprintf("Non-openHiTLS backend test: PASS\n");
-  res = CURLE_OK;
+  result = CURLE_OK;
 
 test_cleanup:
 
   curl_easy_cleanup(curl);
   curl_global_cleanup();
 
-  return res;
+  return result;
 #endif
 }
