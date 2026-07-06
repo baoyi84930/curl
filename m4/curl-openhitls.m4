@@ -27,15 +27,6 @@ dnl ----------------------------------------------------
 dnl check for openHiTLS
 dnl ----------------------------------------------------
 
-case "$OPT_OPENHITLS" in
-  yes|no)
-    openhitlspkg=""
-    ;;
-  *)
-    openhitlspkg="$withval/lib/pkgconfig"
-    ;;
-esac
-
 if test "x$OPT_OPENHITLS" != xno; then
   _cppflags=$CPPFLAGS
   _ldflags=$LDFLAGS
@@ -49,31 +40,14 @@ if test "x$OPT_OPENHITLS" != xno; then
       OPT_OPENHITLS=""
     fi
 
-    dnl try pkg-config magic
-    CURL_CHECK_PKGCONFIG(openhitls, [$openhitlspkg])
-    AC_MSG_NOTICE([Check dir $openhitlspkg])
-
     addld=""
-    addlib=""
+    addlib="-lhitls_tls -lhitls_pki -lhitls_crypto -lhitls_bsl"
     addcflags=""
-    if test "$PKGCONFIG" != "no" ; then
-      addlib=`CURL_EXPORT_PCDIR([$openhitlspkg])
-        $PKGCONFIG --libs-only-l openhitls`
-      addld=`CURL_EXPORT_PCDIR([$openhitlspkg])
-        $PKGCONFIG --libs-only-L openhitls`
-      addcflags=`CURL_EXPORT_PCDIR([$openhitlspkg])
-        $PKGCONFIG --cflags-only-I openhitls`
-      version=`CURL_EXPORT_PCDIR([$openhitlspkg])
-        $PKGCONFIG --modversion openhitls`
-      openhitlslibpath=`echo $addld | $SED -e 's/^-L//'`
-    else
-      addlib=" -lhitls_tls -lhitls_pki -lhitls_crypto -lhitls_bsl"
-      dnl use system defaults if user does not supply a path
-      if test -n "$OPT_OPENHITLS"; then
-        addld=-L$OPT_OPENHITLS/lib$libsuff
-        addcflags="-I$OPT_OPENHITLS/include/hitls -I$OPT_OPENHITLS/include/hitls/tls -I$OPT_OPENHITLS/include/hitls/pki -I$OPT_OPENHITLS/include/hitls/crypto -I$OPT_OPENHITLS/include/hitls/bsl"
-        openhitlslibpath=$OPT_OPENHITLS/lib$libsuff
-      fi
+    dnl use system defaults if user does not supply a path
+    if test -n "$OPT_OPENHITLS"; then
+      addld=-L$OPT_OPENHITLS/lib$libsuff
+      addcflags="-I$OPT_OPENHITLS/include/hitls -I$OPT_OPENHITLS/include/hitls/tls -I$OPT_OPENHITLS/include/hitls/pki -I$OPT_OPENHITLS/include/hitls/crypto -I$OPT_OPENHITLS/include/hitls/bsl"
+      openhitlslibpath=$OPT_OPENHITLS/lib$libsuff
     fi
 
     if test "$curl_cv_apple" = 'yes'; then
@@ -186,7 +160,6 @@ if test "x$OPT_OPENHITLS" != xno; then
           AC_MSG_NOTICE([Added $openhitlslibpath to CURL_LIBRARY_PATH])
         fi
       fi
-      LIBCURL_PC_REQUIRES_PRIVATE="$LIBCURL_PC_REQUIRES_PRIVATE openhitls"
     else
       AC_MSG_ERROR([--with-openhitls but openHiTLS was not found or doesn't work])
     fi
