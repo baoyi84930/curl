@@ -79,6 +79,9 @@ if(OPENHITLS_FOUND)
     "${OPENHITLS_PKI_LIBRARY}"
     "${OPENHITLS_CRYPTO_LIBRARY}"
     "${OPENHITLS_BSL_LIBRARY}")
+  if(WIN32)
+    list(APPEND _openhitls_LIBRARIES "bcrypt")
+  endif()
 
   if(NOT TARGET CURL::openhitls)
     add_library(CURL::openhitls INTERFACE IMPORTED)
