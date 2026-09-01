@@ -516,6 +516,7 @@ Features testable here are:
 - `netrc`
 - `nghttpx`
 - `nghttpx-h3`
+- `openHiTLS`
 - `OpenSSL`
 - `override-dns` - this build can use a "fake" DNS server
 - `parsedate`

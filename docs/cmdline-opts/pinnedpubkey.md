@@ -33,11 +33,12 @@ together then the peer is still verified by public key.
 PEM/DER support:
 
 OpenSSL and GnuTLS (added in 7.39.0), wolfSSL (added in 7.43.0),
-mbedTLS (added in 7.47.0), Schannel (added in 7.58.1)
+mbedTLS (added in 7.47.0), Schannel (added in 7.58.1), openHiTLS
+(added in 8.22.0)
 
 sha256 support:
 
 OpenSSL, GnuTLS and wolfSSL (added in 7.44.0), mbedTLS (added in 7.47.0),
-Schannel (added in 7.58.1)
+Schannel (added in 7.58.1), openHiTLS (added in 8.22.0)
 
 Other SSL backends not supported.

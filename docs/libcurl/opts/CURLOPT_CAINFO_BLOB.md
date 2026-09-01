@@ -15,6 +15,7 @@ TLS-backend:
   - OpenSSL
   - GnuTLS
   - mbedTLS
+  - openHiTLS
   - Rustls
   - wolfSSL
   - Schannel

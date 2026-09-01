@@ -16,6 +16,7 @@ TLS-backend:
   - OpenSSL
   - GnuTLS
   - mbedTLS
+  - openHiTLS
 Added-in: 7.52.0
 ---
 
