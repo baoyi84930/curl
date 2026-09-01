@@ -362,6 +362,7 @@ Details via CMake
 - `CURL_USE_LIBUV`:                         Use libuv for event-based tests. Default: `OFF`
 - `CURL_USE_MBEDTLS`:                       Enable mbedTLS for SSL/TLS. Default: `OFF`
 - `CURL_USE_OPENSSL`:                       Enable OpenSSL for SSL/TLS. Default: `ON` if no other TLS backend was enabled.
+- `CURL_USE_OPENHITLS`:                     Enable openHiTLS for SSL/TLS. Default: `OFF`
 - `CURL_USE_PKGCONFIG`:                     Enable `pkg-config` to detect dependencies.
                                             Default: `ON` for Unix (except Android, Apple devices), vcpkg, MinGW if not cross-compiling.
 - `CURL_USE_RUSTLS`:                        Enable Rustls for SSL/TLS (experimental). Default: `OFF`
@@ -384,6 +385,11 @@ Details via CMake
 - `OPENSSL_CRYPTO_LIBRARY`:                 Absolute path to `crypto` library.
                                             With MSVC, CMake uses variables `LIB_EAY_DEBUG`/`LIB_EAY_RELEASE` instead.
 - `OPENSSL_USE_STATIC_LIBS`:                Look for static OpenSSL libraries.
+- `OPENHITLS_INCLUDE_DIR`:                  Absolute path to openHiTLS include directory.
+- `OPENHITLS_TLS_LIBRARY`:                  Absolute path to `hitls_tls` library.
+- `OPENHITLS_PKI_LIBRARY`:                  Absolute path to `hitls_pki` library.
+- `OPENHITLS_CRYPTO_LIBRARY`:               Absolute path to `hitls_crypto` library.
+- `OPENHITLS_BSL_LIBRARY`:                  Absolute path to `hitls_bsl` library.
 - `ZLIB_INCLUDE_DIR`:                       Absolute path to zlib include directory.
 - `ZLIB_LIBRARY`:                           Absolute path to `zlib` library.
 - `ZLIB_ROOT`:                              Absolute path to the installation root of zlib.

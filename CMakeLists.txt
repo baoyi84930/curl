@@ -744,13 +744,15 @@ cmake_dependent_option(CURL_USE_MBEDTLS "Enable mbedTLS for SSL/TLS" OFF CURL_EN
 cmake_dependent_option(CURL_USE_WOLFSSL "Enable wolfSSL for SSL/TLS" OFF CURL_ENABLE_SSL OFF)
 cmake_dependent_option(CURL_USE_GNUTLS "Enable GnuTLS for SSL/TLS" OFF CURL_ENABLE_SSL OFF)
 cmake_dependent_option(CURL_USE_RUSTLS "Enable Rustls for SSL/TLS (experimental)" OFF CURL_ENABLE_SSL OFF)
+cmake_dependent_option(CURL_USE_OPENHITLS "Enable openHiTLS for SSL/TLS" OFF CURL_ENABLE_SSL OFF)
 
 if(WIN32 OR
    CURL_USE_SCHANNEL OR
    CURL_USE_MBEDTLS OR
    CURL_USE_WOLFSSL OR
    CURL_USE_GNUTLS OR
-   CURL_USE_RUSTLS)
+   CURL_USE_RUSTLS OR
+   CURL_USE_OPENHITLS)
   set(_openssl_default OFF)
 else()
   set(_openssl_default ON)
@@ -765,6 +767,7 @@ curl_count_true(_enabled_ssl_options_count
   CURL_USE_WOLFSSL
   CURL_USE_GNUTLS
   CURL_USE_RUSTLS
+  CURL_USE_OPENHITLS
 )
 if(_enabled_ssl_options_count GREATER 1)
   set(CURL_WITH_MULTI_SSL ON)
@@ -970,6 +973,42 @@ if(CURL_USE_RUSTLS)
   endif()
 
   if(CURL_DEFAULT_SSL_BACKEND AND CURL_DEFAULT_SSL_BACKEND STREQUAL "rustls")
+    set(_valid_default_ssl_backend TRUE)
+  endif()
+  set(_curl_ca_bundle_supported TRUE)
+endif()
+
+if(CURL_USE_OPENHITLS)
+  find_package(OpenHiTLS 0.4.0 MODULE REQUIRED)
+  cmake_push_check_state()
+  list(APPEND CMAKE_REQUIRED_LIBRARIES CURL::openhitls)
+  check_c_source_compiles("
+    #include <bsl/bsl_version.h>
+    #include <tls/hitls.h>
+    #include <tls/hitls_config.h>
+    #if OPENHITLS_VERSION_I < 0x00400000ULL
+    #error openHiTLS 0.4.0 or later required
+    #endif
+    int main(void)
+    {
+      HITLS_Config *config = HITLS_CFG_NewTLSConfig();
+      HITLS_Ctx *ctx = HITLS_New(config);
+      if(ctx)
+        HITLS_Free(ctx);
+      if(config)
+        HITLS_CFG_FreeConfig(config);
+      return 0;
+    }" HAVE_OPENHITLS_0_4_0)
+  cmake_pop_check_state()
+  if(NOT HAVE_OPENHITLS_0_4_0)
+    message(FATAL_ERROR "openHiTLS 0.4.0 or later is required.")
+  endif()
+
+  set(_ssl_enabled ON)
+  set(USE_OPENHITLS ON)
+  list(APPEND CURL_LIBS CURL::openhitls)
+
+  if(CURL_DEFAULT_SSL_BACKEND AND CURL_DEFAULT_SSL_BACKEND STREQUAL "openhitls")
     set(_valid_default_ssl_backend TRUE)
   endif()
   set(_curl_ca_bundle_supported TRUE)
@@ -2077,7 +2116,7 @@ curl_add_if("proxy-HTTP3"   USE_PROXY_HTTP3)
 curl_add_if("MultiSSL"      CURL_WITH_MULTI_SSL)
 curl_add_if("HTTPS-proxy"   NOT CURL_DISABLE_PROXY AND _ssl_enabled AND (USE_OPENSSL OR USE_GNUTLS
                             OR USE_SCHANNEL OR USE_RUSTLS OR USE_MBEDTLS OR
-                            (USE_WOLFSSL AND HAVE_WOLFSSL_BIO_NEW)))
+                            USE_OPENHITLS OR (USE_WOLFSSL AND HAVE_WOLFSSL_BIO_NEW)))
 curl_add_if("Unicode"       ENABLE_UNICODE)
 curl_add_if("threadsafe"    HAVE_ATOMIC OR HAVE_THREADS_POSIX OR WIN32)
 curl_add_if("Debug"         ENABLE_DEBUG)
@@ -2103,6 +2142,7 @@ curl_add_if("mbedTLS"       _ssl_enabled AND USE_MBEDTLS)
 curl_add_if("wolfSSL"       _ssl_enabled AND USE_WOLFSSL)
 curl_add_if("GnuTLS"        _ssl_enabled AND USE_GNUTLS)
 curl_add_if("Rustls"        _ssl_enabled AND USE_RUSTLS)
+curl_add_if("OpenHiTLS"     _ssl_enabled AND USE_OPENHITLS)
 
 if(_items)
   list(SORT _items CASE INSENSITIVE)
@@ -2432,6 +2472,7 @@ if(NOT CURL_DISABLE_INSTALL)
   #   USE_NGHTTP3
   #   USE_NGTCP2 NGTCP2_CRYPTO_BACKEND
   #   USE_OPENSSL OPENSSL_VERSION_MAJOR
+  #   USE_OPENHITLS
   #   USE_QUICHE
   #   USE_RUSTLS
   #   USE_WIN32_LDAP CURL_DISABLE_LDAP
@@ -2468,6 +2509,7 @@ if(NOT CURL_DISABLE_INSTALL)
       "${PROJECT_SOURCE_DIR}/CMake/FindNGHTTP3.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindNGTCP2.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindNettle.cmake"
+      "${PROJECT_SOURCE_DIR}/CMake/FindOpenHiTLS.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindQuiche.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindRustls.cmake"
       "${PROJECT_SOURCE_DIR}/CMake/FindWolfSSL.cmake"
