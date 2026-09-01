@@ -180,6 +180,7 @@ These are the options available to select the TLS backend to use.
 - GnuTLS: `--with-gnutls`.
 - mbedTLS: `--with-mbedtls`
 - OpenSSL: `--with-openssl` (also for AWS-LC, BoringSSL, LibreSSL, and quictls)
+- openHiTLS: `--with-openhitls`
 - Rustls: `--with-rustls`
 - Schannel: `--with-schannel`
 - wolfSSL: `--with-wolfssl`
@@ -323,6 +324,7 @@ curl from the source code:
 --with-gnutls
 --with-mbedtls
 --with-openssl (also works for OpenSSL forks)
+--with-openhitls
 --with-rustls
 --with-wolfssl
 --without-ssl
