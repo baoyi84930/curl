@@ -110,6 +110,7 @@ LIB_VTLS_CFILES =           \
   vtls/keylog.c             \
   vtls/mbedtls.c            \
   vtls/openssl.c            \
+  vtls/openhitls.c          \
   vtls/rustls.c             \
   vtls/schannel.c           \
   vtls/schannel_verify.c    \
@@ -128,6 +129,7 @@ LIB_VTLS_HFILES =           \
   vtls/keylog.h             \
   vtls/mbedtls.h            \
   vtls/openssl.h            \
+  vtls/openhitls.h          \
   vtls/rustls.h             \
   vtls/schannel.h           \
   vtls/schannel_int.h       \

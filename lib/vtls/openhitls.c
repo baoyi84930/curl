@@ -2124,8 +2124,6 @@ hitls_connect_step3(struct Curl_cfilter *cf, struct Curl_easy *data)
   return CURLE_OK;
 }
 
-
-
 static CURLcode
 hitls_connect(struct Curl_cfilter *cf, struct Curl_easy *data,
               bool *done)
