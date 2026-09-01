@@ -14,6 +14,7 @@ Protocol:
 TLS-backend:
   - OpenSSL
   - GnuTLS
+  - openHiTLS
   - wolfSSL
   - mbedTLS
   - Schannel
@@ -141,6 +142,8 @@ footer:
 
 7.58.1: Schannel
 
+8.22.0: openHiTLS
+
 ## sha256 support
 
 7.44.0: OpenSSL, GnuTLS and wolfSSL
@@ -148,6 +151,8 @@ footer:
 7.47.0: mbedTLS
 
 7.58.1: Schannel
+
+8.22.0: openHiTLS
 
 Other SSL backends not supported.
 

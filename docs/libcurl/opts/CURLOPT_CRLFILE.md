@@ -13,6 +13,7 @@ Protocol:
 TLS-backend:
   - GnuTLS
   - mbedTLS
+  - openHiTLS
   - OpenSSL
   - Rustls
 Added-in: 7.19.0

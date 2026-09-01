@@ -26,8 +26,9 @@ Multiple algorithms can be provided by separating them with `:`
 (e.g. `DSA+SHA256:rsa_pss_pss_sha256`). The parameter is available as `-sigalgs` in the
 OpenSSL `s_client` and `s_server` utilities.
 
-`--sigalgs` allows a OpenSSL powered curl to make SSL-connections with exactly
-the signature algorithms requested by the client, avoiding nontransparent client/server
-negotiations.
+`--sigalgs` allows an OpenSSL or openHiTLS powered curl to make
+SSL-connections with exactly the signature algorithms requested by the client,
+avoiding nontransparent client/server negotiations.
 
-If this option is set, the default signature algorithm list built into OpenSSL are ignored.
+If this option is set, the default signature algorithm list built into the TLS
+backend is ignored.

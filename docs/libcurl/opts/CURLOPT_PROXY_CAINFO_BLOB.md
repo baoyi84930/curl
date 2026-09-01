@@ -18,6 +18,7 @@ Protocol:
   - TLS
 TLS-backend:
   - OpenSSL
+  - openHiTLS
   - Rustls
   - Schannel
 Added-in: 7.77.0

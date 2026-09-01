@@ -66,8 +66,8 @@ This does not only mean no other thread that is using libcurl.
 
 # Names
 
-SSL backend names (case-insensitive): GnuTLS, mbedTLS, OpenSSL, Rustls,
-Schannel, wolfSSL
+SSL backend names (case-insensitive): GnuTLS, mbedTLS, openHiTLS, OpenSSL,
+Rustls, Schannel, wolfSSL
 
 The name "OpenSSL" is used for all versions of OpenSSL and its associated
 forks/flavors in this function. AmiSSL, AWS-LC, BoringSSL, LibreSSL, OpenSSL

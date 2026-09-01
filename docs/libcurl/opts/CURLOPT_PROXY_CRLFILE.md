@@ -14,6 +14,7 @@ Protocol:
 TLS-backend:
   - GnuTLS
   - mbedTLS
+  - openHiTLS
   - OpenSSL
 Added-in: 7.52.0
 ---
