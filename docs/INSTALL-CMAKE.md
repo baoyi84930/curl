@@ -461,6 +461,11 @@ Details via CMake
 - `NETTLE_INCLUDE_DIR`:                     Absolute path to nettle include directory.
 - `NETTLE_HOGWEED_LIBRARY`:                 Absolute path to `hogweed` library.
 - `NETTLE_LIBRARY`:                         Absolute path to `nettle` library.
+- `OPENHITLS_INCLUDE_DIR`:                  Absolute path to openHiTLS include directory.
+- `OPENHITLS_TLS_LIBRARY`:                  Absolute path to `hitls_tls` library.
+- `OPENHITLS_PKI_LIBRARY`:                  Absolute path to `hitls_pki` library.
+- `OPENHITLS_CRYPTO_LIBRARY`:               Absolute path to `hitls_crypto` library.
+- `OPENHITLS_BSL_LIBRARY`:                  Absolute path to `hitls_bsl` library.
 - `PTHREAD_LIBRARY`:                        Absolute path to `pthread` library. (for Rustls)
 - `QUICHE_INCLUDE_DIR`:                     Absolute path to quiche include directory.
 - `QUICHE_LIBRARY`:                         Absolute path to `quiche` library.
