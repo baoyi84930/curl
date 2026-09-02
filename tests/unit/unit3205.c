@@ -28,7 +28,7 @@ static CURLcode test_unit3205(const char *arg)
 {
   UNITTEST_BEGIN_SIMPLE
 
-#if defined(USE_MBEDTLS) || defined(USE_RUSTLS)
+#if defined(USE_MBEDTLS) || defined(USE_RUSTLS) || defined(USE_OPENHITLS)
 
   struct test_cs_entry {
     uint16_t id;

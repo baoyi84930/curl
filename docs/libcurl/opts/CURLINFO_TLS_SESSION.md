@@ -13,6 +13,7 @@ Protocol:
 TLS-backend:
   - OpenSSL
   - GnuTLS
+  - openHiTLS
 Added-in: 7.34.0
 ---
 
@@ -34,8 +35,9 @@ CURLcode curl_easy_getinfo(CURL *handle, CURLINFO_TLS_SESSION,
 **This option has been superseded** by CURLINFO_TLS_SSL_PTR(3).
 
 This option is exactly the same as CURLINFO_TLS_SSL_PTR(3) except in the case
-of OpenSSL and wolfSSL. If the session *backend* is CURLSSLBACKEND_OPENSSL the
-session *internals* pointer varies depending on the option:
+of OpenSSL, openHiTLS and wolfSSL. If the session *backend* is
+CURLSSLBACKEND_OPENSSL the session *internals* pointer varies depending on the
+option:
 
 ## OpenSSL
 
@@ -47,6 +49,12 @@ You can obtain an **SSL_CTX** pointer from an SSL pointer using OpenSSL
 function *SSL_get_SSL_CTX(3)*. Therefore unless you need compatibility
 with older versions of libcurl use CURLINFO_TLS_SSL_PTR(3). Refer to
 that document for more information.
+
+## openHiTLS
+
+CURLINFO_TLS_SESSION(3) openHiTLS session *internals* is **HITLS_Config ***.
+
+CURLINFO_TLS_SSL_PTR(3) openHiTLS session *internals* is **HITLS_Ctx ***.
 
 ## wolfSSL
 

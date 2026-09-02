@@ -23,7 +23,7 @@
  ***************************************************************************/
 #include "curl_setup.h"
 
-#if defined(USE_MBEDTLS) || defined(USE_RUSTLS)
+#if defined(USE_MBEDTLS) || defined(USE_RUSTLS) || defined(USE_OPENHITLS)
 
 #include "vtls/cipher_suite.h"
 
@@ -699,4 +699,4 @@ int Curl_cipher_suite_get_str(uint16_t id, char *buf, size_t buf_size,
   return r;
 }
 
-#endif /* defined(USE_MBEDTLS) || defined(USE_RUSTLS) */
+#endif /* USE_MBEDTLS || USE_RUSTLS || USE_OPENHITLS */

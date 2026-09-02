@@ -15,6 +15,7 @@ TLS-backend:
   - OpenSSL
   - GnuTLS
   - mbedTLS
+  - openHiTLS
   - wolfSSL
 Added-in: 7.9.8
 ---

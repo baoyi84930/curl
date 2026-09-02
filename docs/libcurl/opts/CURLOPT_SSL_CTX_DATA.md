@@ -11,6 +11,7 @@ Protocol:
   - TLS
 TLS-backend:
   - OpenSSL
+  - openHiTLS
   - wolfSSL
   - mbedTLS
 Added-in: 7.10.6

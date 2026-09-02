@@ -192,6 +192,7 @@ my %knownprotos = (
 my %knowntls = (
     'GnuTLS' => 1,
     'mbedTLS' => 1,
+    'openHiTLS' => 1,
     'OpenSSL' => 1,
     'Rustls' => 1,
     'Schannel' => 1,

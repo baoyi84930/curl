@@ -48,6 +48,7 @@ CMAKE_DIST =                                     \
   CMake/FindNGHTTP3.cmake                        \
   CMake/FindNGTCP2.cmake                         \
   CMake/FindNettle.cmake                         \
+  CMake/FindOpenHiTLS.cmake                      \
   CMake/FindQuiche.cmake                         \
   CMake/FindRustls.cmake                         \
   CMake/FindWolfSSL.cmake                        \

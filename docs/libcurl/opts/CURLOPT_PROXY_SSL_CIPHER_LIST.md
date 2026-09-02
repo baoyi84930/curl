@@ -14,6 +14,7 @@ Protocol:
   - TLS
 TLS-backend:
   - OpenSSL
+  - openHiTLS
   - Schannel
   - wolfSSL
   - mbedTLS

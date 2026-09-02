@@ -13,6 +13,7 @@ Protocol:
   - TLS
 TLS-backend:
   - OpenSSL
+  - openHiTLS
 Added-in: 8.14.0
 ---
 
@@ -34,7 +35,7 @@ Pass a char pointer, pointing to a null-terminated string holding the list of
 signature algorithms to use for the TLS connection. The list must be syntactically
 correct, it consists of one or more signature algorithm strings separated by colons.
 
-A valid example of a signature algorithms list with OpenSSL is:
+A valid example of a signature algorithms list is:
 ~~~
 "DSA+SHA256:rsa_pss_pss_sha256"
 ~~~
@@ -45,7 +46,7 @@ option.
 Using this option multiple times makes the last set string override the
 previous ones. Set it to NULL to disable its use again.
 
-Works with OpenSSL and its BoringSSL fork (added in 8.14.0).
+Works with OpenSSL and its BoringSSL fork (added in 8.14.0), and openHiTLS.
 
 # DEFAULT
 
@@ -72,7 +73,7 @@ int main(void)
 
 # HISTORY
 
-OpenSSL support added in 8.14.0.
+OpenSSL support added in 8.14.0. Also works with openHiTLS.
 
 # %AVAILABILITY%
 

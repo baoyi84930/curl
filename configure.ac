@@ -167,7 +167,7 @@ AC_SUBST(VERSIONNUM)
 
 dnl
 dnl initialize all the info variables
-         curl_ssl_msg="no       (--with-{openssl,gnutls,mbedtls,wolfssl,schannel,amissl,rustls} )"
+         curl_ssl_msg="no       (--with-{openssl,gnutls,mbedtls,wolfssl,schannel,amissl,rustls,openhitls} )"
          curl_ssh_msg="no       (--with-{libssh,libssh2})"
         curl_zlib_msg="no       (--with-zlib)"
       curl_brotli_msg="no       (--with-brotli)"
@@ -302,6 +302,15 @@ AS_HELP_STRING([--with-rustls=PATH],[where to look for Rustls, PATH points to th
   if test "x$withval" != "xno"; then
     TLSCHOICE="${TLSCHOICE:+$TLSCHOICE, }Rustls"
     experimental="$experimental Rustls"
+  fi
+])
+
+OPT_OPENHITLS=no
+AC_ARG_WITH(openhitls,
+AS_HELP_STRING([--with-openhitls=PATH],[where to look for openHiTLS, PATH points to the installation root]),[
+  OPT_OPENHITLS=$withval
+  if test "x$withval" != "xno"; then
+    TLSCHOICE="${TLSCHOICE:+$TLSCHOICE, }openHiTLS"
   fi
 ])
 
@@ -527,6 +536,7 @@ Select from these:
   --with-gnutls
   --with-mbedtls
   --with-openssl (also works for AWS-LC, BoringSSL and LibreSSL)
+  --with-openhitls
   --with-rustls
   --with-schannel
   --with-wolfssl
@@ -2139,6 +2149,7 @@ CURL_WITH_GNUTLS
 CURL_WITH_MBEDTLS
 CURL_WITH_WOLFSSL
 CURL_WITH_RUSTLS
+CURL_WITH_OPENHITLS
 CURL_WITH_APPLE_SECTRUST
 
 dnl link required libraries for USE_WIN32_CRYPTO or SCHANNEL_ENABLED
@@ -2151,10 +2162,10 @@ if test "$curl_cv_native_windows" = "yes"; then
   LIBS="-lbcrypt $LIBS"
 fi
 
-case "x$SSL_DISABLED$OPENSSL_ENABLED$GNUTLS_ENABLED$MBEDTLS_ENABLED$WOLFSSL_ENABLED$SCHANNEL_ENABLED$RUSTLS_ENABLED" in
+case "x$SSL_DISABLED$OPENSSL_ENABLED$GNUTLS_ENABLED$MBEDTLS_ENABLED$WOLFSSL_ENABLED$SCHANNEL_ENABLED$RUSTLS_ENABLED$OPENHITLS_ENABLED" in
   x)
     AC_MSG_ERROR([TLS not detected, cannot build with HTTPS, FTPS, NTLM and more.
-Use --with-openssl, --with-gnutls, --with-wolfssl, --with-mbedtls, --with-schannel, --with-amissl or --with-rustls to address this.])
+Use --with-openssl, --with-gnutls, --with-wolfssl, --with-mbedtls, --with-schannel, --with-amissl, --with-rustls or --with-openhitls to address this.])
     ;;
   x1)
     dnl one SSL backend is enabled
@@ -2166,7 +2177,7 @@ Use --with-openssl, --with-gnutls, --with-wolfssl, --with-mbedtls, --with-schann
     ;;
   xD*)
     AC_MSG_ERROR([--without-ssl has been set together with an explicit option to use an SSL library
-(e.g. --with-openssl, --with-gnutls, --with-wolfssl, --with-mbedtls, --with-schannel, --with-amissl, --with-rustls).
+(e.g. --with-openssl, --with-gnutls, --with-wolfssl, --with-mbedtls, --with-schannel, --with-amissl, --with-rustls, --with-openhitls).
 Since these are conflicting parameters, verify which is the desired one and drop the other.])
     ;;
   *)
@@ -2826,6 +2837,8 @@ AS_HELP_STRING([--disable-versioned-symbols], [Disable versioned symbols in shar
         versioned_symbols_flavor="MULTISSL_"
       elif test "$OPENSSL_ENABLED" = "1"; then
         versioned_symbols_flavor="OPENSSL_"
+      elif test "$OPENHITLS_ENABLED" = "1"; then
+        versioned_symbols_flavor="OPENHITLS_"
       elif test "$MBEDTLS_ENABLED" = "1"; then
         versioned_symbols_flavor="MBEDTLS_"
       elif test "$WOLFSSL_ENABLED" = "1"; then
@@ -5337,6 +5350,7 @@ if test "$CURL_DISABLE_HTTP" != "1"; then
     if test "$OPENSSL_ENABLED" = "1" ||
        test "$GNUTLS_ENABLED" = "1" ||
        test "$RUSTLS_ENABLED" = "1" ||
+       test "$OPENHITLS_ENABLED" = "1" ||
        test "$SCHANNEL_ENABLED" = "1" ||
        test "$MBEDTLS_ENABLED" = "1"; then
       SUPPORT_FEATURES="$SUPPORT_FEATURES HTTPS-proxy"

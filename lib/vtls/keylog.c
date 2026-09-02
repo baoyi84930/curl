@@ -25,7 +25,7 @@
 #include "vtls/keylog.h"
 
 #if defined(USE_OPENSSL) || defined(USE_GNUTLS) || defined(USE_WOLFSSL) || \
-  defined(USE_RUSTLS)
+  defined(USE_OPENHITLS) || defined(USE_RUSTLS)
 
 #include "escape.h"
 #include "curlx/fopen.h"

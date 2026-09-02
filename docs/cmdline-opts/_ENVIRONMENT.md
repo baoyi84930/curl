@@ -73,8 +73,8 @@ the case insensitive name of the particular backend to use when curl is
 invoked. Setting a name that is not a built-in alternative makes curl stay
 with the default.
 
-SSL backend names (case-insensitive): **gnutls**, **mbedtls**, **openssl**,
-**rustls**, **schannel**, **wolfssl**
+SSL backend names (case-insensitive): **gnutls**, **mbedtls**, **openhitls**,
+**openssl**, **rustls**, **schannel**, **wolfssl**
 
 ## `HOME <directory>`
 If set, this is used to find the home directory when that is needed. Like when
@@ -108,7 +108,7 @@ If you set this environment variable to a filename, curl stores TLS secrets
 from its connections in that file when invoked to enable you to analyze the
 TLS traffic in real time using network analyzing tools such as Wireshark. This
 works with the following TLS backends: OpenSSL, LibreSSL (TLS 1.2 max),
-BoringSSL, GnuTLS, wolfSSL and Rustls.
+BoringSSL, GnuTLS, openHiTLS, wolfSSL and Rustls.
 
 ## `USERPROFILE <directory>`
 On Windows, this variable is used when trying to find the home directory. If

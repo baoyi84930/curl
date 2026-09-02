@@ -21,8 +21,10 @@ Set specific curves to use during SSL session establishment according to RFC
 (e.g. `X25519:P-521`). The parameter is available identically in the OpenSSL
 `s_client` and `s_server` utilities.
 
---curves allows a OpenSSL powered curl to make SSL-connections with exactly
+--curves allows an OpenSSL, openHiTLS or wolfSSL powered curl to make
+SSL-connections with exactly
 the (EC) curve requested by the client, avoiding nontransparent client/server
 negotiations.
 
-If this option is set, the default curves list built into OpenSSL are ignored.
+If this option is set, the default curves list built into the TLS backend is
+ignored.
