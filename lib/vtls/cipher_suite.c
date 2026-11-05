@@ -23,7 +23,7 @@
  ***************************************************************************/
 #include "curl_setup.h"
 
-#if defined(USE_MBEDTLS) || defined(USE_RUSTLS)
+#if defined(USE_MBEDTLS) || defined(USE_RUSTLS) || defined(USE_OPENHITLS)
 
 #include "vtls/cipher_suite.h"
 
@@ -66,6 +66,9 @@ static const char cs_txt[] =
   "CHACHA20" "\0"
   "DES" "\0"
   "DHE" "\0"
+#ifdef USE_OPENHITLS
+  "DSS" "\0"
+#endif
   "ECDH" "\0"
   "ECDHE" "\0"
   "ECDSA" "\0"
@@ -79,7 +82,7 @@ static const char cs_txt[] =
   "SHA" "\0"
   "SHA256" "\0"
   "SHA384" "\0"
-#ifdef USE_MBEDTLS
+#if defined(USE_MBEDTLS) || defined(USE_OPENHITLS)
   "ARIA" "\0"
   "ARIA128" "\0"
   "ARIA256" "\0"
@@ -107,6 +110,9 @@ enum {
   CS_TXT_IDX_CHACHA20,
   CS_TXT_IDX_DES,
   CS_TXT_IDX_DHE,
+#ifdef USE_OPENHITLS
+  CS_TXT_IDX_DSS,
+#endif
   CS_TXT_IDX_ECDH,
   CS_TXT_IDX_ECDHE,
   CS_TXT_IDX_ECDSA,
@@ -120,7 +126,7 @@ enum {
   CS_TXT_IDX_SHA,
   CS_TXT_IDX_SHA256,
   CS_TXT_IDX_SHA384,
-#ifdef USE_MBEDTLS
+#if defined(USE_MBEDTLS) || defined(USE_OPENHITLS)
   CS_TXT_IDX_ARIA,
   CS_TXT_IDX_ARIA128,
   CS_TXT_IDX_ARIA256,
@@ -177,7 +183,21 @@ static const struct cs_entry cs_list[] = {
   CS_ENTRY(0xCCA8, ECDHE,RSA,CHACHA20,POLY1305,,,,),
   CS_ENTRY(0xCCA9, TLS,ECDHE,ECDSA,WITH,CHACHA20,POLY1305,SHA256,),
   CS_ENTRY(0xCCA9, ECDHE,ECDSA,CHACHA20,POLY1305,,,,),
-#ifdef USE_MBEDTLS
+#if defined(USE_MBEDTLS) || defined(USE_OPENHITLS)
+#ifdef USE_OPENHITLS
+  CS_ENTRY(0x00A2, TLS,DHE,DSS,WITH,AES,128,GCM,SHA256),
+  CS_ENTRY(0x00A2, DHE,DSS,AES128,GCM,SHA256,,,),
+  CS_ENTRY(0x00A3, TLS,DHE,DSS,WITH,AES,256,GCM,SHA384),
+  CS_ENTRY(0x00A3, DHE,DSS,AES256,GCM,SHA384,,,),
+  CS_ENTRY(0x0032, TLS,DHE,DSS,WITH,AES,128,CBC,SHA),
+  CS_ENTRY(0x0032, DHE,DSS,AES128,SHA,,,,),
+  CS_ENTRY(0x0038, TLS,DHE,DSS,WITH,AES,256,CBC,SHA),
+  CS_ENTRY(0x0038, DHE,DSS,AES256,SHA,,,,),
+  CS_ENTRY(0x0040, TLS,DHE,DSS,WITH,AES,128,CBC,SHA256),
+  CS_ENTRY(0x0040, DHE,DSS,AES128,SHA256,,,,),
+  CS_ENTRY(0x006A, TLS,DHE,DSS,WITH,AES,256,CBC,SHA256),
+  CS_ENTRY(0x006A, DHE,DSS,AES256,SHA256,,,,),
+#endif
   CS_ENTRY(0x002F, TLS,RSA,WITH,AES,128,CBC,SHA,),
   CS_ENTRY(0x002F, AES128,SHA,,,,,,),
   CS_ENTRY(0x0035, TLS,RSA,WITH,AES,256,CBC,SHA,),
@@ -699,4 +719,4 @@ int Curl_cipher_suite_get_str(uint16_t id, char *buf, size_t buf_size,
   return r;
 }
 
-#endif /* defined(USE_MBEDTLS) || defined(USE_RUSTLS) */
+#endif /* USE_MBEDTLS || USE_RUSTLS || USE_OPENHITLS */

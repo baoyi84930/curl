@@ -15,6 +15,7 @@ Protocol:
 TLS-backend:
   - OpenSSL
   - GnuTLS
+  - openHiTLS
   - mbedTLS
   - wolfSSL
 Added-in: 7.52.0
@@ -123,9 +124,13 @@ PEM/DER support:
 
  7.52.0: GnuTLS, OpenSSL, mbedTLS, wolfSSL
 
+ 8.22.0: openHiTLS
+
 sha256 support:
 
  7.52.0: GnuTLS, OpenSSL, mbedTLS, wolfSSL
+
+ 8.22.0: openHiTLS
 
 Other SSL backends not supported.
 

@@ -363,6 +363,7 @@ Details via CMake
 - `CURL_USE_LIBUV`:                         Use libuv for event-based tests. Default: `OFF`
 - `CURL_USE_MBEDTLS`:                       Enable mbedTLS for SSL/TLS. Default: `OFF`
 - `CURL_USE_OPENSSL`:                       Enable OpenSSL for SSL/TLS. Default: `ON` if no other TLS backend was enabled.
+- `CURL_USE_OPENHITLS`:                     Enable openHiTLS for SSL/TLS. Default: `OFF`
 - `CURL_USE_PKGCONFIG`:                     Enable `pkg-config` to detect dependencies.
                                             Default: `ON` for Unix (except Android, Apple devices), vcpkg, MinGW if not cross-compiling.
 - `CURL_USE_RUSTLS`:                        Enable Rustls for SSL/TLS (experimental). Default: `OFF`
@@ -461,6 +462,11 @@ Details via CMake
 - `NETTLE_INCLUDE_DIR`:                     Absolute path to nettle include directory.
 - `NETTLE_HOGWEED_LIBRARY`:                 Absolute path to `hogweed` library.
 - `NETTLE_LIBRARY`:                         Absolute path to `nettle` library.
+- `OPENHITLS_INCLUDE_DIR`:                  Absolute path to openHiTLS include directory.
+- `OPENHITLS_TLS_LIBRARY`:                  Absolute path to `hitls_tls` library.
+- `OPENHITLS_PKI_LIBRARY`:                  Absolute path to `hitls_pki` library.
+- `OPENHITLS_CRYPTO_LIBRARY`:               Absolute path to `hitls_crypto` library.
+- `OPENHITLS_BSL_LIBRARY`:                  Absolute path to `hitls_bsl` library.
 - `PTHREAD_LIBRARY`:                        Absolute path to `pthread` library. (for Rustls)
 - `QUICHE_INCLUDE_DIR`:                     Absolute path to quiche include directory.
 - `QUICHE_LIBRARY`:                         Absolute path to `quiche` library.

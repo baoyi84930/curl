@@ -15,6 +15,7 @@ Protocol:
   - TLS
 TLS-backend:
   - OpenSSL
+  - openHiTLS
   - wolfSSL
   - mbedTLS
 Added-in: 7.10.6
@@ -44,10 +45,11 @@ This callback function gets called by libcurl immediately before the
 initialization of an SSL connection after having processed all other SSL
 related options to give a last chance to an application to modify the behavior
 of the SSL initialization. The *ssl_ctx* parameter is a pointer to the SSL
-library's *SSL_CTX* for OpenSSL or wolfSSL, a pointer to *mbedtls_ssl_config*
-for mbedTLS. If an error is returned from the callback no attempt to establish
-a connection is made and the perform operation returns the callback's error
-code. Set the *clientp* argument passed in to this callback with the
+library's *SSL_CTX* for OpenSSL or wolfSSL, a pointer to *HITLS_Config* for
+openHiTLS, a pointer to *mbedtls_ssl_config* for mbedTLS. If an error is
+returned from the callback no attempt to establish a connection is made and the
+perform operation returns the callback's error code. Set the *clientp* argument
+passed in to this callback with the
 CURLOPT_SSL_CTX_DATA(3) option.
 
 This function gets called for all new connections made to a server, during the
