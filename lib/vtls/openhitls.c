@@ -274,8 +274,8 @@ hitls_certchain(struct Curl_cfilter *cf, struct Curl_easy *data,
 
     /* Pass to curl's x509 parser */
     result = Curl_extract_certinfo(data, cert_index,
-                                  (const char *)cert_data,
-                                  (const char *)cert_data + cert_len);
+                                  (const uint8_t *)cert_data,
+                                  (const uint8_t *)cert_data + cert_len);
     if(result != CURLE_OK) {
       infof(data, "OpenHiTLS: Failed to extract certificate %d info",
             cert_index);
