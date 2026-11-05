@@ -28,6 +28,11 @@ dnl check for openHiTLS
 dnl ----------------------------------------------------
 
 if test "x$OPT_OPENHITLS" != xno; then
+
+  if test "$curl_cv_native_windows" = 'yes'; then
+    AC_MSG_ERROR([openHiTLS does not support Windows])
+  fi
+
   _cppflags=$CPPFLAGS
   _ldflags=$LDFLAGS
   _ldflagspc=$LDFLAGSPC
